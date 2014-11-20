@@ -32,7 +32,7 @@ use unisim.vcomponents.all;
 entity Music5000 is
     generic (
         sumwidth : integer := 19;
-        dacwidth : integer := 11
+        dacwidth : integer := 12
     );    
     port (
         clk49152 : in     std_logic;
@@ -43,39 +43,24 @@ entity Music5000 is
         pgfd_n   : in     std_logic;
         bus_addr : in     std_logic_vector (7 downto 0);
         bus_data : inout  std_logic_vector (7 downto 0);
-        audio_l  : out    std_logic;
-        audio_r  : out    std_logic;
+        dac_cs_n : out    std_logic;
+        dac_sck  : out    std_logic;
+        dac_sdi  : out    std_logic;
+        dac_ldac_n : out    std_logic;
         test     : out    std_logic
     );
 end music5000;
 
 architecture Behavioral of Music5000 is
 
---component DCM0
---    port (
---        CLKIN_IN  : in  std_logic;
---        CLK0_OUT  : out std_logic;
---        CLK0_OUT1 : out std_logic;
---        CLK2X_OUT : out std_logic
---    ); 
---end component;
-
-	COMPONENT DCM1
-	PORT(
-		CLKIN_IN : IN std_logic;          
-		CLKFX_OUT : OUT std_logic;
-		CLKIN_IBUFG_OUT : OUT std_logic;
-		CLK0_OUT : OUT std_logic
-		);
-	END COMPONENT;
-    
-	COMPONENT DCM2
-	PORT(
-		CLKIN_IN : IN std_logic;          
-		CLKFX_OUT : OUT std_logic;
-		CLK0_OUT : OUT std_logic
-		);
-	END COMPONENT;
+component DCM1
+port(
+    CLKIN_IN : IN std_logic;          
+    CLKFX_OUT : OUT std_logic;
+    CLKIN_IBUFG_OUT : OUT std_logic;
+    CLK0_OUT : OUT std_logic
+    );
+end component;
 
 component Ram2K
     port (
@@ -100,25 +85,12 @@ component LogLinRom
         );
 end component;
 
-component pwm_sddac
-  generic (
-    msbi_g : integer := 8
-  );
-  port (
-    clk_i   : in  std_logic;
-    reset   : in  std_logic;
-    dac_i   : in  std_logic_vector(msbi_g downto 0);
-    dac_o   : out std_logic
-  );
-end component;
-
 signal clk6 : std_logic;
 signal clk23783 : std_logic;
-signal clk49 : std_logic;
-signal clkdac : std_logic;
 signal clkctr : std_logic_vector (1 downto 0);
 
 signal sum : std_logic_vector (8 downto 0);
+signal sum1 : std_logic_vector (7 downto 0);
 signal a : std_logic_vector (7 downto 0);
 signal b : std_logic_vector (7 downto 0);
 
@@ -155,16 +127,17 @@ signal load : std_logic;
 
 signal dac_input_log : std_logic_vector (6 downto 0);
 signal dac_input_lin : std_logic_vector (12 downto 0);
-signal dac_input_lin_l : signed (sumwidth - 1 downto 0);
-signal dac_input_lin_r : signed(sumwidth - 1 downto 0);
-signal dac_input_lin_l1 : signed (dacwidth - 1 downto 0);
-signal dac_input_lin_r1 : signed(dacwidth - 1 downto 0);
+signal dac_input_lin_l : unsigned (sumwidth - 1 downto 0);
+signal dac_input_lin_r : unsigned(sumwidth - 1 downto 0);
+signal dac_input_lin_l1 : unsigned (dacwidth - 1 downto 0);
+signal dac_input_lin_r1 : unsigned(dacwidth - 1 downto 0);
+
 signal dac_pos : std_logic_vector (3 downto 0);
 signal dac_sign : std_logic;
 signal dac_sb : std_logic;
 signal dac_ed : std_logic;
 
-signal reg_s0 : std_logic_vector (3 downto 0);
+signal reg_s0 : std_logic_vector (2 downto 0);
 signal reg_s4 : std_logic_vector (3 downto 0);
 
 -- bits of address fcff
@@ -173,27 +146,13 @@ signal bank : std_logic_vector(2 downto 0);
 
 begin
 
---    Inst_DCM0 : DCM0
---        port map (
---            CLKIN_IN => clk49,
---            CLK0_OUT => clk6,
---            CLK0_OUT1 => open,
---            CLK2X_OUT => open
---        );
-
 	Inst_DCM1: DCM1 PORT MAP(
 		CLKIN_IN => clk49152,
 		CLKFX_OUT => clk23783,
-		CLKIN_IBUFG_OUT => clk49,
+		CLKIN_IBUFG_OUT => open,
 		CLK0_OUT => open
 	);
-
-	Inst_DCM2: DCM2 PORT MAP(
-		CLKIN_IN => clk49,
-		CLKFX_OUT => clkdac,
-		CLK0_OUT => open
-	);
-
+    
     clock_divider : process(clk23783, rst_n)
     begin
         if rising_edge(clk23783) then
@@ -272,7 +231,7 @@ begin
             addr <= std_logic_vector(unsigned(addr) + 1);
             pa(2 downto 1) <= addr(2 downto 1);
             if (s0_n = '0') then
-              reg_s0 <= wave_dout(7) & (c4d or sign) & wave_dout(5 downto 4);
+              reg_s0 <= (c4d or sign) & wave_dout(5 downto 4);
             end if;
             if (s4_n = '0') then
               reg_s4 <= wave_dout(7 downto 4);
@@ -351,15 +310,18 @@ begin
             a <= wave_dout;
             if (s1_n = '0') then
               load <= wave_dout(0);
-            elsif (s7_n = '0') then
+            elsif (s6_n = '0') then
               load <= '0';
             end if;
+            sum1 <= sum(7 downto 0);
         end if;
     end process;
 
     c0(0) <= addr(2) and c4d;
-    b <= phase_dout when addr(0) = '0' and load = '0'
-         else (others => '0');                   
+    b <= sum1 when s0_n = '0' and load = '0' else
+         phase_dout when addr(0) = '0' and load = '0' else
+         (others => '0');
+    
     sum <= std_logic_vector(unsigned("0" & a) + unsigned("0" & b) + unsigned("00000000" & c0));
     c4 <= sum(8);
     sign <= a(7);
@@ -409,25 +371,23 @@ begin
     begin
         if rising_edge(clk6) then
             -- Todo: this expression may not be correct
-            if (addr = "0000001") then
+            if (addr = "0000000") then
                 dac_input_lin_l <= (others => '0');
                 dac_input_lin_r <= (others => '0');
                 dac_input_lin_l(sumwidth - 1) <= '1';
                 dac_input_lin_r(sumwidth - 1) <= '1';
-                dac_input_lin_l1 <= dac_input_lin_l(sumwidth - 1 downto sumwidth - dacwidth); 
-                dac_input_lin_r1 <= dac_input_lin_r(sumwidth - 1 downto sumwidth - dacwidth); 
             else
                 if dac_ed = '1' then
                     if dac_sb = '1' then
-                        dac_input_lin_l <= dac_input_lin_l - signed("0" & dac_input_lin);                
+                        dac_input_lin_l <= dac_input_lin_l - unsigned("0" & dac_input_lin);                
                     else
-                        dac_input_lin_l <= dac_input_lin_l + signed("0" & dac_input_lin);                
+                        dac_input_lin_l <= dac_input_lin_l + unsigned("0" & dac_input_lin);                
                     end if;
                 else
                     if dac_sb = '1' then
-                        dac_input_lin_r <= dac_input_lin_r - signed("0" & dac_input_lin);                
+                        dac_input_lin_r <= dac_input_lin_r - unsigned("0" & dac_input_lin);                
                     else
-                        dac_input_lin_r <= dac_input_lin_r + signed("0" & dac_input_lin);                
+                        dac_input_lin_r <= dac_input_lin_r + unsigned("0" & dac_input_lin);                
                     end if;
                 end if;
             end if;
@@ -438,33 +398,58 @@ begin
     -- DACs
     ------------------------------------------------
     
-    dac_l : pwm_sddac
-    generic map(
-        msbi_g => dacwidth - 1
-    )
-	port map(
-		clk_i				=> clkdac,
-		reset				=> not rst_n,
-		dac_i				=> std_logic_vector(dac_input_lin_l1),
-		dac_o				=> audio_l
-	);
+    dac_sync : process(clk6, rst_n)
+    begin
+        if rst_n = '0' then
+            dac_cs_n <= '1';
+            dac_sck <= '0';
+            dac_sdi <= '0';
+            dac_ldac_n <= '1';
+            dac_input_lin_l1 <= (others => '0');
+            dac_input_lin_r1 <= (others => '0');
+        elsif rising_edge(clk6) then
 
-    dac_r : pwm_sddac
-    generic map(
-        msbi_g => dacwidth - 1
-    )
-	port map(
-		clk_i				=> clkdac,
-		reset				=> not rst_n,
-		dac_i				=> std_logic_vector(dac_input_lin_r1),
-		dac_o				=> audio_r
-	);
-    
+            if (unsigned(addr(5 downto 0)) < 33) then
+                dac_cs_n <= '0';
+                dac_sck <= addr(0);
+            else
+                dac_cs_n <= '1';
+                dac_sck <= '0';
+            end if;
+
+            if (addr(0) = '0') then
+                if (unsigned(addr(5 downto 1)) = 0) then
+                    if (addr(6) = '0') then
+                        dac_input_lin_l1 <= dac_input_lin_l(sumwidth - 1 downto sumwidth - dacwidth); 
+                        dac_input_lin_r1 <= dac_input_lin_r(sumwidth - 1 downto sumwidth - dacwidth); 
+                    end if;
+                    dac_sdi <= addr(6);
+                elsif (unsigned(addr(5 downto 1)) < 4) then
+                    dac_sdi <= '1';
+                elsif (unsigned(addr(5 downto 1)) < 16) then
+                    if (addr(6) = '0') then
+                        dac_sdi <= dac_input_lin_l1(dacwidth - 1);
+                        dac_input_lin_l1 <= dac_input_lin_l1(dacwidth - 2 downto 0) & '0';
+                    else
+                        dac_sdi <= dac_input_lin_r1(dacwidth - 1);
+                        dac_input_lin_r1 <= dac_input_lin_r1(dacwidth - 2 downto 0) & '0';
+                    end if;
+                else
+                    dac_sdi <= '0';
+                end if;
+                if (unsigned(addr(6 downto 1)) = 60) then
+                    dac_ldac_n <= '0';
+                else
+                    dac_ldac_n <= '1';
+                end if;                
+            end if;
+        end if;
+     end process;   
    
     ------------------------------------------------
     -- Test
     ------------------------------------------------
-    test <= ram_we;
+    test <= index;
 
     
 end Behavioral;

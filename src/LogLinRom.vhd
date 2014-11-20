@@ -45,7 +45,7 @@ begin
     p_rom : process
     begin
         wait until rising_edge(CLK);
-        DATA <= std_logic_vector(mem(conv_integer(ADDR)));
+        DATA <= std_logic_vector(mem(to_integer(unsigned(ADDR))));
     end process;
 
 end RTL;

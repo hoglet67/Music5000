@@ -92,5 +92,7 @@ TIMESPEC TS_clk49152 = PERIOD tnm_clk49152 20.3450520833ns;
  NET "pgfc_n"       LOC = "P86" | IOSTANDARD = LVCMOS33 ;
  NET "test"         LOC = "P88" | IOSTANDARD = LVCMOS33 ;
 
-NET "audio_l"       LOC = "P30" | IOSTANDARD = LVCMOS33 | DRIVE = 24;
-NET "audio_r"       LOC = "P32" | IOSTANDARD = LVCMOS33 | DRIVE = 24;
+NET "dac_cs_n"      LOC = "P30" | IOSTANDARD = LVCMOS33;
+NET "dac_sck"       LOC = "P32" | IOSTANDARD = LVCMOS33;
+NET "dac_sdi"       LOC = "P34" | IOSTANDARD = LVCMOS33;
+NET "dac_ldac_n"    LOC = "P35" | IOSTANDARD = LVCMOS33;
