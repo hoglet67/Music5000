@@ -1,2 +1,0 @@
-# Output products list for <DCM1>
-DCM1_flist.txt

@@ -96,3 +96,12 @@ NET "dac_cs_n"      LOC = "P30" | IOSTANDARD = LVCMOS33;
 NET "dac_sck"       LOC = "P32" | IOSTANDARD = LVCMOS33;
 NET "dac_sdi"       LOC = "P34" | IOSTANDARD = LVCMOS33;
 NET "dac_ldac_n"    LOC = "P35" | IOSTANDARD = LVCMOS33;
+
+NET "led<0>"        LOC = "P81" | IOSTANDARD = LVCMOS33;
+NET "led<1>"        LOC = "P1"  | IOSTANDARD = LVCMOS33;
+NET "led<2>"        LOC = "P96" | IOSTANDARD = LVCMOS33;
+NET "led<3>"        LOC = "P97" | IOSTANDARD = LVCMOS33;
+NET "led<4>"        LOC = "P53" | IOSTANDARD = LVCMOS33;
+NET "led<5>"        LOC = "P50" | IOSTANDARD = LVCMOS33;
+NET "led<6>"        LOC = "P75" | IOSTANDARD = LVCMOS33;
+NET "led<7>"        LOC = "P74" | IOSTANDARD = LVCMOS33;
