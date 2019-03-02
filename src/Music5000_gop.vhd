@@ -44,8 +44,8 @@ begin
 
     inst_DCM : DCM
         generic map (
-            CLKFX_MULTIPLY   => 5,
-            CLKFX_DIVIDE     => 8,
+            CLKFX_MULTIPLY   => 15,
+            CLKFX_DIVIDE     => 31,
             CLKIN_PERIOD     => 20.345,
             CLK_FEEDBACK     => "NONE"
             )
