@@ -27,7 +27,8 @@ use ieee.numeric_std.all;
 entity Music5000 is
     generic (
         sumwidth : integer := 20;
-        dacwidth : integer := 16
+        dacwidth : integer := 16;
+        id       : std_logic_vector(3 downto 0) := "0011"
     );
     port (
         -- This is the cpu clock
@@ -116,7 +117,7 @@ begin
         if rising_edge(clk) then
             if clken = '1' then
                 if (pgfc_n = '0' and a = "11111111" and rnw = '0') then
-                    if (din(7 downto 4) = "0011") then
+                    if (din(7 downto 4) = id) then
                         wrg <= '1';
                     else
                         wrg <= '0';

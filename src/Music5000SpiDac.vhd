@@ -47,7 +47,8 @@ begin
     inst_Music5000Core : entity work.Music5000
         generic map (
             sumwidth => sumwidth,
-            dacwidth => dacwidth
+            dacwidth => dacwidth,
+            id       => "0011"
             )
         port map (
             -- This is the cpu clock
