@@ -19,9 +19,6 @@
 ----------------------------------------------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
-
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
 use ieee.numeric_std.all;
 
 entity Music5000 is
@@ -132,8 +129,8 @@ begin
             ram_dout                 when pgfd_n = '0' and rnw = '1' else
             (others => '0');
 
-    dout_oel <= '0' when rnw = '1' and pgfc_n = '0' and a = "11111111" else
-                '0' when rnw = '1' and pgfd_n = '0' and wrg = '1'      else
+    dout_oel <= '0' when rnw = '1' and pgfc_n = '0' and wrg = '1' and a = "11111111" else
+                '0' when rnw = '1' and pgfd_n = '0' and wrg = '1'                    else
                 '1';
 
     ------------------------------------------------

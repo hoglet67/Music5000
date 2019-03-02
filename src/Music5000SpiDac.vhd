@@ -28,14 +28,20 @@ end music5000SpiDac;
 
 architecture Behavioral of Music5000SpiDac is
 
+signal audio5_l        : std_logic_vector(dacwidth - 1 downto 0);
+signal audio5_r        : std_logic_vector(dacwidth - 1 downto 0);
+signal audio3_l        : std_logic_vector(dacwidth - 1 downto 0);
+signal audio3_r        : std_logic_vector(dacwidth - 1 downto 0);
 signal audio_l         : std_logic_vector(dacwidth - 1 downto 0);
 signal audio_r         : std_logic_vector(dacwidth - 1 downto 0);
 signal dac_shift_reg_l : std_logic_vector(dacwidth - 1 downto 0);
 signal dac_shift_reg_r : std_logic_vector(dacwidth - 1 downto 0);
 signal cycle           : std_logic_vector(6 downto 0);
 signal din             : std_logic_vector(7 downto 0);
-signal dout            : std_logic_vector(7 downto 0);
-signal dout_oel        : std_logic;
+signal dout3           : std_logic_vector(7 downto 0);
+signal dout3_oel       : std_logic;
+signal dout5           : std_logic_vector(7 downto 0);
+signal dout5_oel       : std_logic;
 
 begin
 
@@ -44,7 +50,7 @@ begin
     -- (this is shared with BeebFPGA)
     ------------------------------------------------
 
-    inst_Music5000Core : entity work.Music5000
+    inst_Music5000 : entity work.Music5000
         generic map (
             sumwidth => sumwidth,
             dacwidth => dacwidth,
@@ -52,33 +58,65 @@ begin
             )
         port map (
             -- This is the cpu clock
-            clk      => clke     ,
-            clken    => '1'    ,
+            clk      => clke      ,
+            clken    => '1'       ,
             -- This is the 6MHz audio clock
-            clk6     => clk6     ,
-            clk6en   => '1'   ,
-            rnw      => rnw      ,
-            rst_n    => rst_n    ,
-            pgfc_n   => pgfc_n   ,
-            pgfd_n   => pgfd_n   ,
-            a        => bus_addr ,
-            din      => din      ,
-            dout     => dout     ,
-            dout_oel => dout_oel ,
-            audio_l  => audio_l  ,
-            audio_r  => audio_r  ,
-            cycle    => cycle    ,
+            clk6     => clk6      ,
+            clk6en   => '1'       ,
+            rnw      => rnw       ,
+            rst_n    => rst_n     ,
+            pgfc_n   => pgfc_n    ,
+            pgfd_n   => pgfd_n    ,
+            a        => bus_addr  ,
+            din      => din       ,
+            dout     => dout5     ,
+            dout_oel => dout5_oel ,
+            audio_l  => audio5_l  ,
+            audio_r  => audio5_r  ,
+            cycle    => cycle     ,
             test     => test
+            );
+
+    inst_Music3000 : entity work.Music5000
+        generic map (
+            sumwidth => sumwidth,
+            dacwidth => dacwidth,
+            id       => "0101"
+            )
+        port map (
+            -- This is the cpu clock
+            clk      => clke      ,
+            clken    => '1'       ,
+            -- This is the 6MHz audio clock
+            clk6     => clk6      ,
+            clk6en   => '1'       ,
+            rnw      => rnw       ,
+            rst_n    => rst_n     ,
+            pgfc_n   => pgfc_n    ,
+            pgfd_n   => pgfd_n    ,
+            a        => bus_addr  ,
+            din      => din       ,
+            dout     => dout3     ,
+            dout_oel => dout3_oel ,
+            audio_l  => audio3_l  ,
+            audio_r  => audio3_r  ,
+            cycle    => open      ,
+            test     => open
             );
 
     din <= bus_data;
 
-    bus_data <= dout when dout_oel = '0' else (others => 'Z');
+    bus_data <= dout5 when dout5_oel = '0' else
+                dout3 when dout3_oel = '0' else
+                (others => 'Z');
 
     ------------------------------------------------
     -- SPI DAC
     -- (this is used in all my standalone M5K designs)
     ------------------------------------------------
+
+    audio_l <= std_logic_vector(signed(audio5_l) + signed(audio3_l));
+    audio_r <= std_logic_vector(signed(audio5_r) + signed(audio3_r));
 
 dac_sync : process(clk6)
     begin
