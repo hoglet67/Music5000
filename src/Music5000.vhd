@@ -43,6 +43,7 @@ entity Music5000 is
         a        : in     std_logic_vector (7 downto 0);
         din      : in     std_logic_vector (7 downto 0);
         dout     : out    std_logic_vector (7 downto 0);
+        dout_oel : out    std_logic;
         audio_l  : out    std_logic_vector (dacwidth - 1 downto 0);
         audio_r  : out    std_logic_vector (dacwidth - 1 downto 0);
         cycle    : out    std_logic_vector (6 downto 0);
@@ -113,7 +114,7 @@ begin
     bus_interface_fc : process(clk, rst_n)
     begin
         if rst_n = '0' then
-            wrg_n <= '0';
+            wrg_n <= '1';
             bank <= (others => '0');
         elsif rising_edge(clk) then
             if clken = '1' then
@@ -129,9 +130,13 @@ begin
         end if;
     end process;
 
-    dout <= wrg_n & "000" & bank & '0' when pgfc_n = '0' and rnw = '1'
-            else ram_dout when pgfd_n = '0' and rnw = '1'
-            else (others => '0');
+    dout <= wrg_n & "000" & bank & '0' when pgfc_n = '0' and rnw = '1' else
+            ram_dout                   when pgfd_n = '0' and rnw = '1' else
+            (others => '0');
+
+    dout_oel <= '0' when rnw = '1' and pgfc_n = '0' and a = "11111111" else
+                '0' when rnw = '1' and pgfd_n = '0' and wrg_n = '0'    else
+                '1';
 
     ------------------------------------------------
     -- Wave RAM

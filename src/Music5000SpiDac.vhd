@@ -35,6 +35,7 @@ signal dac_shift_reg_r : std_logic_vector(dacwidth - 1 downto 0);
 signal cycle           : std_logic_vector(6 downto 0);
 signal din             : std_logic_vector(7 downto 0);
 signal dout            : std_logic_vector(7 downto 0);
+signal dout_oel        : std_logic;
 
 begin
 
@@ -62,6 +63,7 @@ begin
             a        => bus_addr ,
             din      => din      ,
             dout     => dout     ,
+            dout_oel => dout_oel ,
             audio_l  => audio_l  ,
             audio_r  => audio_r  ,
             cycle    => cycle    ,
@@ -70,10 +72,7 @@ begin
 
     din <= bus_data;
 
-    -- TODO: Only drive the data bus when the device is paged in
-    bus_data <= dout when pgfc_n = '0' and rnw = '1' else
-                dout when pgfd_n = '0' and rnw = '1' else
-                (others => 'Z');
+    bus_data <= dout when dout_oel = '0' else (others => 'Z');
 
     ------------------------------------------------
     -- SPI DAC
