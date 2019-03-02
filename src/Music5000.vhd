@@ -102,7 +102,7 @@ signal reg_s0 : std_logic_vector (2 downto 0);
 signal reg_s4 : std_logic_vector (3 downto 0);
 
 -- bits of address fcff
-signal wrg_n : std_logic;
+signal wrg : std_logic;
 signal bank : std_logic_vector(2 downto 0);
 
 begin
@@ -111,18 +111,15 @@ begin
     -- Bus Interface
     ------------------------------------------------
 
-    bus_interface_fc : process(clk, rst_n)
+    bus_interface_fc : process(clk)
     begin
-        if rst_n = '0' then
-            wrg_n <= '1';
-            bank <= (others => '0');
-        elsif rising_edge(clk) then
+        if rising_edge(clk) then
             if clken = '1' then
                 if (pgfc_n = '0' and a = "11111111" and rnw = '0') then
                     if (din(7 downto 4) = "0011") then
-                        wrg_n <= '0';
+                        wrg <= '1';
                     else
-                        wrg_n <= '1';
+                        wrg <= '0';
                     end if;
                     bank <= din(3 downto 1);
                 end if;
@@ -130,12 +127,12 @@ begin
         end if;
     end process;
 
-    dout <= wrg_n & "000" & bank & '0' when pgfc_n = '0' and rnw = '1' else
-            ram_dout                   when pgfd_n = '0' and rnw = '1' else
+    dout <= wrg & "000" & bank & '0' when pgfc_n = '0' and rnw = '1' else
+            ram_dout                 when pgfd_n = '0' and rnw = '1' else
             (others => '0');
 
     dout_oel <= '0' when rnw = '1' and pgfc_n = '0' and a = "11111111" else
-                '0' when rnw = '1' and pgfd_n = '0' and wrg_n = '0'    else
+                '0' when rnw = '1' and pgfd_n = '0' and wrg = '1'      else
                 '1';
 
     ------------------------------------------------
@@ -143,7 +140,7 @@ begin
     ------------------------------------------------
 
     -- Running Wave RAM of seperate clocks
-    -- ram_we <= '1' when clk6en = '1' and pgfd_n = '0' and rnw = '0' and wrg_n = '0' else '0';
+    -- ram_we <= '1' when clk6en = '1' and pgfd_n = '0' and rnw = '0' and wrg = '1' else '0';
     -- ram_clk <= clk;
 
      -- Running Wave RAM of the same clock
@@ -162,7 +159,7 @@ begin
                      ram_we <= '0';
                  end if;
                  we2 := we1;
-                 if pgfd_n = '0' and rnw = '0' and wrg_n = '0' then
+                 if pgfd_n = '0' and rnw = '0' and wrg = '1' then
                      we1 := '1';
                  else
                      we1 := '0';
@@ -188,7 +185,7 @@ begin
             douta => ram_dout,
             -- port B connects to DSP
             clkb  => clk6,
-            web   => '0',
+            web   => not rst_n,    -- write zero to the RAM on reset
             addrb => wave_addr,
             dinb  => (others => '0'),
             doutb => wave_dout
@@ -198,15 +195,9 @@ begin
     -- Controller
     ------------------------------------------------
 
-    controller_sync : process(clk6, rst_n)
+    controller_sync1 : process(clk6)
     begin
-        if rst_n = '0' then
-            addr <= (others => '0');
-            pa <= (others => '0');
-            reg_s0 <= (others => '0');
-            reg_s4  <= (others => '0');
-            index <= '0';
-        elsif rising_edge(clk6) then
+        if rising_edge(clk6) then
             if clk6en = '1' then
                 addr <= std_logic_vector(unsigned(addr) + 1);
                 pa(2 downto 1) <= addr(2 downto 1);
@@ -216,6 +207,16 @@ begin
                 if (s4_n = '0') then
                     reg_s4 <= wave_dout(7 downto 4);
                 end if;
+            end if;
+        end if;
+    end process;
+
+    controller_sync2 : process(clk6, rst_n)
+    begin
+        if rst_n = '0' then
+            index <= '0';
+        elsif rising_edge(clk6) then
+            if clk6en = '1' then
                 if (s7_n = '0') then
                     index <= reg_s0(1) and reg_s0(2);
                 end if;

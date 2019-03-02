@@ -79,16 +79,9 @@ begin
     -- (this is used in all my standalone M5K designs)
     ------------------------------------------------
 
-dac_sync : process(clk6, rst_n)
+dac_sync : process(clk6)
     begin
-        if rst_n = '0' then
-            dac_cs_n <= '1';
-            dac_sck <= '0';
-            dac_sdi <= '0';
-            dac_ldac_n <= '1';
-            dac_shift_reg_l <= (others => '0');
-            dac_shift_reg_r <= (others => '0');
-        elsif rising_edge(clk6) then
+        if rising_edge(clk6) then
 
             if (unsigned(cycle(5 downto 0)) < 33) then
                 dac_cs_n <= '0';
