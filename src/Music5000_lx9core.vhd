@@ -89,6 +89,8 @@ begin
             dac_sck    => dac_sck    ,
             dac_sdi    => dac_sdi    ,
             dac_ldac_n => dac_ldac_n ,
+            enable5    => '1'        ,
+            enable3    => '1'        ,
             test       => test
             );
 

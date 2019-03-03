@@ -22,6 +22,8 @@ entity Music5000SpiDac is
         dac_sck    : out   std_logic;
         dac_sdi    : out   std_logic;
         dac_ldac_n : out   std_logic;
+        enable5    : in    std_logic;
+        enable3    : in    std_logic;
         test       : out   std_logic
     );
 end music5000SpiDac;
@@ -111,14 +113,32 @@ begin
                 (others => 'Z');
 
     ------------------------------------------------
+    -- Audio Mixer
+    -- (between Music5000 and Music3000 output)
+    ------------------------------------------------
+    mixer : process(enable5, enable3, audio5_l, audio5_r, audio3_l, audio3_r)
+        variable tmp_l : signed(dacwidth - 1 downto 0);
+        variable tmp_r : signed(dacwidth - 1 downto 0);
+    begin
+        tmp_l := (others => '0');
+        tmp_r := (others => '0');
+        if (enable5 = '1') then
+            tmp_l := tmp_l + signed(audio5_l);
+            tmp_r := tmp_r + signed(audio5_r);
+        end if;
+        if (enable3 = '1') then
+            tmp_l := tmp_l + signed(audio3_l);
+            tmp_r := tmp_r + signed(audio3_r);
+        end if;
+        audio_l <= std_logic_vector(tmp_l);
+        audio_r <= std_logic_vector(tmp_r);
+    end process;
+
+    ------------------------------------------------
     -- SPI DAC
     -- (this is used in all my standalone M5K designs)
     ------------------------------------------------
-
-    audio_l <= std_logic_vector(signed(audio5_l) + signed(audio3_l));
-    audio_r <= std_logic_vector(signed(audio5_r) + signed(audio3_r));
-
-dac_sync : process(clk6)
+    dac_sync : process(clk6)
     begin
         if rising_edge(clk6) then
 

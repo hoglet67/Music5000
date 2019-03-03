@@ -23,6 +23,8 @@ entity Music5000_gop is
         dac_sdi    : out    std_logic;
         dac_ldac_n : out    std_logic;
         -- Misc
+        sw1        : in     std_logic;
+        sw2        : in     std_logic;
         led        : out    std_logic_vector (7 downto 0);
         test       : out    std_logic
     );
@@ -89,6 +91,8 @@ begin
             dac_sck    => dac_sck    ,
             dac_sdi    => dac_sdi    ,
             dac_ldac_n => dac_ldac_n ,
+            enable5    => sw1        ,
+            enable3    => sw2        ,
             test       => test
             );
 
