@@ -459,7 +459,7 @@ Text Label 8050 1650 0    50   ~ 0
 GND
 Text Label 8050 2550 0    50   ~ 0
 GND
-Text Label 7550 2550 2    50   ~ 0
+Text Label 7550 1650 2    50   ~ 0
 +3V3
 $Comp
 L Connector_Generic:Conn_02x20_Odd_Even J3
@@ -1237,7 +1237,7 @@ Text Label 3050 6250 2    50   ~ 0
 NPGFC
 Text Label 3050 6350 2    50   ~ 0
 NPGFD
-NoConn ~ 7550 1650
+NoConn ~ 7550 2550
 NoConn ~ 6500 1650
 $Comp
 L Device:R R5
@@ -1449,4 +1449,68 @@ F 3 "~" H 1750 6600 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	1550 6450 1550 6600
+$Comp
+L Switch:SW_Push SW1
+U 1 1 5C7C4C64
+P 9250 3100
+F 0 "SW1" H 9250 3385 50  0000 C CNN
+F 1 "SW_Push" H 9250 3294 50  0000 C CNN
+F 2 "Button_Switch_THT:SW_Tactile_Straight_KSA0Axx1LFTR" H 9250 3300 50  0001 C CNN
+F 3 "" H 9250 3300 50  0001 C CNN
+	1    9250 3100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_Push SW2
+U 1 1 5C7C4D3E
+P 9250 3600
+F 0 "SW2" H 9250 3885 50  0000 C CNN
+F 1 "SW_Push" H 9250 3794 50  0000 C CNN
+F 2 "Button_Switch_THT:SW_Tactile_Straight_KSA0Axx1LFTR" H 9250 3800 50  0001 C CNN
+F 3 "" H 9250 3800 50  0001 C CNN
+	1    9250 3600
+	1    0    0    -1  
+$EndComp
+Text Label 8750 3100 2    50   ~ 0
+PMOD1_6
+Text Label 8750 3600 2    50   ~ 0
+PMOD1_7
+Wire Wire Line
+	9450 3100 9450 3600
+$Comp
+L power:GND #PWR021
+U 1 1 5C7C7AF9
+P 9450 3700
+F 0 "#PWR021" H 9450 3450 50  0001 C CNN
+F 1 "GND" H 9455 3527 50  0000 C CNN
+F 2 "" H 9450 3700 50  0001 C CNN
+F 3 "" H 9450 3700 50  0001 C CNN
+	1    9450 3700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9450 3600 9450 3700
+Connection ~ 9450 3600
+$Comp
+L Device:R R8
+U 1 1 5C7D1F77
+P 8900 3100
+F 0 "R8" V 9100 3100 50  0000 L CNN
+F 1 "1K0" V 9000 3050 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8830 3100 50  0001 C CNN
+F 3 "~" H 8900 3100 50  0001 C CNN
+	1    8900 3100
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Device:R R9
+U 1 1 5C7D51EB
+P 8900 3600
+F 0 "R9" V 9100 3600 50  0000 L CNN
+F 1 "1K0" V 9000 3550 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 8830 3600 50  0001 C CNN
+F 3 "~" H 8900 3600 50  0001 C CNN
+	1    8900 3600
+	0    -1   -1   0   
+$EndComp
 $EndSCHEMATC
