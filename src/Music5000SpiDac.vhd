@@ -26,7 +26,7 @@ entity Music5000SpiDac is
         enable3    : in    std_logic;
         test       : out   std_logic
     );
-end music5000SpiDac;
+end Music5000SpiDac;
 
 architecture Behavioral of Music5000SpiDac is
 

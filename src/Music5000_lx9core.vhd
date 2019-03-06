@@ -37,7 +37,7 @@ entity Music5000_lx9core is
         pmod1        : out   std_logic_vector(7 downto 4);
         led          : out   std_logic
     );
-end music5000_lx9core;
+end Music5000_lx9core;
 
 architecture Behavioral of Music5000_lx9core is
 
