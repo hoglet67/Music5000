@@ -45,7 +45,48 @@ signal dout3_oel       : std_logic;
 signal dout5           : std_logic_vector(7 downto 0);
 signal dout5_oel       : std_logic;
 
+signal owl_dout        : std_logic_vector(7 downto 0);
+signal owl_oel         : std_logic;
+signal owl_page        : std_logic;
+signal owl_irq_n       : std_logic;
+
 begin
+
+    ------------------------------------------------
+    -- OWL Logo Test
+    -- (this is used in all my standalone M5K designs)
+    ------------------------------------------------
+
+    bus_interface_fc : process(clke)
+    begin
+        if falling_edge(clke) then
+            if rst_n = '0' then
+                owl_page  <= '1';
+                owl_irq_n <= '0';
+            elsif pgfc_n = '0' and bus_addr = x"ff" then
+                if rnw = '0' then
+                    if din = x"ff" then
+                        owl_page  <= '1';
+                    else
+                        owl_page  <= '0';
+                    end if;
+                else
+                    owl_irq_n <= '1';
+                end if;
+            end if;
+        end if;
+    end process;
+
+    inst_OwlRom : entity work.OwlRom
+        port map (
+            clock   => clke,     -- rising edge
+            address => bus_addr,
+            data    => owl_dout
+            );
+
+    owl_oel <= '0' when pgfd_n = '0' and rnw = '1' and owl_page = '1' else '1';
+
+    test <= '0' when owl_irq_n = '0' else 'Z';
 
     ------------------------------------------------
     -- Music 5000 Core
@@ -76,7 +117,7 @@ begin
             audio_l  => audio5_l  ,
             audio_r  => audio5_r  ,
             cycle    => cycle     ,
-            test     => test
+            test     => open
             );
 
     inst_Music3000 : entity work.Music5000
@@ -108,8 +149,9 @@ begin
 
     din <= bus_data;
 
-    bus_data <= dout5 when dout5_oel = '0' else
-                dout3 when dout3_oel = '0' else
+    bus_data <= owl_dout when owl_oel = '0'   else
+                dout5    when dout5_oel = '0' else
+                dout3    when dout3_oel = '0' else
                 (others => 'Z');
 
     ------------------------------------------------
@@ -180,5 +222,6 @@ begin
             end if;
         end if;
      end process;
+
 
 end Behavioral;
