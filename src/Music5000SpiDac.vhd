@@ -60,7 +60,7 @@ begin
             )
         port map (
             -- This is the cpu clock
-            clk      => clke      ,
+            clk      => not clke  ,
             clken    => '1'       ,
             -- This is the 6MHz audio clock
             clk6     => clk6      ,
@@ -87,7 +87,7 @@ begin
             )
         port map (
             -- This is the cpu clock
-            clk      => clke      ,
+            clk      => not clke  ,
             clken    => '1'       ,
             -- This is the 6MHz audio clock
             clk6     => clk6      ,
