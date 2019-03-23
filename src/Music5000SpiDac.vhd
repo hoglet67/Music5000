@@ -24,7 +24,7 @@ entity Music5000SpiDac is
         dac_ldac_n : out   std_logic;
         enable5    : in    std_logic;
         enable3    : in    std_logic;
-        test       : out   std_logic
+        irq_n      : out   std_logic
     );
 end Music5000SpiDac;
 
@@ -48,7 +48,6 @@ signal dout5_oel       : std_logic;
 signal owl_dout        : std_logic_vector(7 downto 0);
 signal owl_oel         : std_logic;
 signal owl_page        : std_logic;
-signal owl_irq_n       : std_logic;
 
 begin
 
@@ -62,7 +61,7 @@ begin
         if falling_edge(clke) then
             if rst_n = '0' then
                 owl_page  <= '1';
-                owl_irq_n <= '0';
+                irq_n <= '0';
             elsif pgfc_n = '0' and bus_addr = x"ff" then
                 if rnw = '0' then
                     if din = x"ff" then
@@ -71,7 +70,7 @@ begin
                         owl_page  <= '0';
                     end if;
                 else
-                    owl_irq_n <= '1';
+                    irq_n <= '1';
                 end if;
             end if;
         end if;
@@ -85,8 +84,6 @@ begin
             );
 
     owl_oel <= '0' when pgfd_n = '0' and rnw = '1' and owl_page = '1' else '1';
-
-    test <= '0' when owl_irq_n = '0' else 'Z';
 
     ------------------------------------------------
     -- Music 5000 Core

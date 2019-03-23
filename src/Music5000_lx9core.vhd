@@ -42,7 +42,7 @@ end Music5000_lx9core;
 architecture Behavioral of Music5000_lx9core is
 
 signal clk6 : std_logic;
-signal test : std_logic;
+signal irq_n : std_logic;
 
 begin
 
@@ -91,14 +91,14 @@ begin
             dac_ldac_n => dac_ldac_n ,
             enable5    => '1'        ,
             enable3    => '1'        ,
-            test       => test
+            irq_n      => irq_n
             );
 
     ------------------------------------------------
     -- 1MHZ Bus FPGA Adapter Specific Stuff
     ------------------------------------------------
 
-    irq          <= '0';
+    irq          <= not irq_n;
     nmi          <= '0';
 
     bus_data_oel <= '0' when pgfc_n = '0' or pgfd_n = '0' else '1';
@@ -113,6 +113,6 @@ begin
     pmod0        <= (others => '0');
     pmod1        <= (others => '0');
 
-    led          <= test;
+    led          <= not rst_n;
 
 end Behavioral;

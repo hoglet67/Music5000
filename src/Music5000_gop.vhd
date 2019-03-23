@@ -36,6 +36,8 @@ signal clk6 : std_logic;
 signal clk23783 : std_logic;
 signal clkctr : std_logic_vector (1 downto 0);
 
+signal irq_n : std_logic;
+
 begin
 
     ------------------------------------------------
@@ -93,12 +95,15 @@ begin
             dac_ldac_n => dac_ldac_n ,
             enable5    => sw1        ,
             enable3    => sw2        ,
-            test       => test
+            irq_n      => irq_n
             );
+
 
     ------------------------------------------------
     -- GOP Specific Stuff
     ------------------------------------------------
     led <= (others => '0');
+
+    test <= '0' when irq_n = '0' else 'Z';
 
 end Behavioral;
