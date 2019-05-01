@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 library unisim;
 use unisim.vcomponents.all;
 
-entity Music5000_lx9core is
+entity Music5000_lx9core_old is
     port (
         -- System oscillator
         clk50        : in    std_logic;
@@ -34,15 +34,12 @@ entity Music5000_lx9core is
         ram_wel      : out   std_logic;
         -- Misc
         pmod0        : out   std_logic_vector(7 downto 0);
-        pmod1        : out   std_logic_vector(7 downto 0);
-        pmod2        : out   std_logic_vector(3 downto 0);
-        sw1          : in    std_logic;
-        sw2          : in    std_logic;
+        pmod1        : out   std_logic_vector(7 downto 4);
         led          : out   std_logic
     );
-end Music5000_lx9core;
+end Music5000_lx9core_old;
 
-architecture Behavioral of Music5000_lx9core is
+architecture Behavioral of Music5000_lx9core_old is
 
 signal clk6 : std_logic;
 signal irq_n : std_logic;
@@ -115,8 +112,7 @@ begin
 
     pmod0        <= (others => '0');
     pmod1        <= (others => '0');
-    pmod2        <= (others => '0');
 
-    led          <= sw1 or sw2 or not (rst_n);
+    led          <= not rst_n;
 
 end Behavioral;
