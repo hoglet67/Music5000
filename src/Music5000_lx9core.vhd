@@ -117,6 +117,6 @@ begin
     pmod1        <= (others => '0');
     pmod2        <= (others => '0');
 
-    led          <= sw1 or sw2 or not (rst_n);
+    led          <= sw1 or sw2;
 
 end Behavioral;
