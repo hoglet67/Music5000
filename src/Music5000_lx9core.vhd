@@ -88,13 +88,15 @@ begin
             pgfd_n     => pgfd_n     ,
             bus_addr   => bus_addr   ,
             bus_data   => bus_data   ,
+            bus_data_oel=>bus_data_oel,
             dac_cs_n   => dac_cs_n   ,
             dac_sck    => dac_sck    ,
             dac_sdi    => dac_sdi    ,
             dac_ldac_n => dac_ldac_n ,
             enable5    => '1'        ,
             enable3    => '1'        ,
-            irq_n      => irq_n
+            irq_n      => irq_n      ,
+            owl        => sw1
             );
 
     ------------------------------------------------
@@ -104,7 +106,6 @@ begin
     irq          <= not irq_n;
     nmi          <= '0';
 
-    bus_data_oel <= '0' when pgfc_n = '0' or pgfd_n = '0' else '1';
     bus_data_dir <= rnw;
 
     ram_addr     <= (others => '0');

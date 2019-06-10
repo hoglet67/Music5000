@@ -8,3 +8,9 @@ ipcore_dir/create_DCM1.tcl
 ipcore_dir/create_DCM2.tcl
 ipcore_dir/xaw2vhdl.log
 not_in_git/
+usage_statistics_webtalk.html
+webtalk.log
+webtalk_impact.xml
+impact_impact.xwbt
+impact.xsl
+impact.ipf

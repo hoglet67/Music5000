@@ -47,7 +47,7 @@ entity Music5000 is
         cycle    : out    std_logic_vector (6 downto 0);
         test     : out    std_logic
     );
-end music5000;
+end Music5000;
 
 architecture Behavioral of Music5000 is
 

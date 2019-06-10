@@ -18,13 +18,16 @@ entity Music5000SpiDac is
         pgfd_n     : in    std_logic;
         bus_addr   : in    std_logic_vector (7 downto 0);
         bus_data   : inout std_logic_vector (7 downto 0);
+        bus_data_oel: out  std_logic;
         dac_cs_n   : out   std_logic;
         dac_sck    : out   std_logic;
         dac_sdi    : out   std_logic;
         dac_ldac_n : out   std_logic;
         enable5    : in    std_logic;
         enable3    : in    std_logic;
-        irq_n      : out   std_logic
+        irq_n      : out   std_logic;
+        test_o     : out   std_logic;
+        owl        : in    std_logic
     );
 end Music5000SpiDac;
 
@@ -60,15 +63,16 @@ begin
     begin
         if falling_edge(clke) then
             if rst_n = '0' then
-                owl_page  <= '1';
-                irq_n <= '0';
+                if owl = '1' then
+                    owl_page  <= '1';
+                    irq_n <= '0';
+                else
+                    owl_page  <= '0';
+                    irq_n <= '1';
+                end if;
             elsif pgfc_n = '0' and bus_addr = x"ff" then
                 if rnw = '0' then
-                    if din = x"ff" then
-                        owl_page  <= '1';
-                    else
-                        owl_page  <= '0';
-                    end if;
+                    owl_page  <= '0';
                 else
                     irq_n <= '1';
                 end if;
@@ -114,7 +118,7 @@ begin
             audio_l  => audio5_l  ,
             audio_r  => audio5_r  ,
             cycle    => cycle     ,
-            test     => open
+            test     => open      
             );
 
     inst_Music3000 : entity work.Music5000
@@ -150,6 +154,10 @@ begin
                 dout5    when dout5_oel = '0' else
                 dout3    when dout3_oel = '0' else
                 (others => 'Z');
+
+    bus_data_oel <= '0' when rnw = '0' else
+                    '0' when owl_oel = '0' or dout5_oel = '0' or dout3_oel = '0' else 
+                    '1';
 
     ------------------------------------------------
     -- Audio Mixer
