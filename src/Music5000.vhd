@@ -102,6 +102,7 @@ signal reg_s4 : std_logic_vector (3 downto 0);
 -- bits of address fcff
 signal wrg : std_logic;
 signal bank : std_logic_vector(2 downto 0);
+signal spare : std_logic;
 
 begin
 
@@ -120,13 +121,14 @@ begin
                         wrg <= '0';
                     end if;
                     bank <= din(3 downto 1);
+                    spare <= din(0);
                 end if;
             end if;
         end if;
     end process;
 
-    dout <= wrg & "000" & bank & '0' when pgfc_n = '0' and rnw = '1' else
-            ram_dout                 when pgfd_n = '0' and rnw = '1' else
+    dout <= (id & bank & spare) xor x"FF" when pgfc_n = '0' and rnw = '1' else
+            ram_dout                      when pgfd_n = '0' and rnw = '1' else
             (others => '0');
 
     dout_oel <= '0' when rnw = '1' and pgfc_n = '0' and wrg = '1' and a = "11111111" else
