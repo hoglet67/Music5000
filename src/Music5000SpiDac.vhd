@@ -27,7 +27,7 @@ entity Music5000SpiDac is
         enable3    : in    std_logic;
         irq_n      : out   std_logic;
         test_o     : out   std_logic;
-        owl        : in    std_logic
+        owl        : in    std_logic := '1'
     );
 end Music5000SpiDac;
 
@@ -118,7 +118,7 @@ begin
             audio_l  => audio5_l  ,
             audio_r  => audio5_r  ,
             cycle    => cycle     ,
-            test     => open      
+            test     => open
             );
 
     inst_Music3000 : entity work.Music5000
@@ -156,7 +156,7 @@ begin
                 (others => 'Z');
 
     bus_data_oel <= '0' when rnw = '0' else
-                    '0' when owl_oel = '0' or dout5_oel = '0' or dout3_oel = '0' else 
+                    '0' when owl_oel = '0' or dout5_oel = '0' or dout3_oel = '0' else
                     '1';
 
     ------------------------------------------------

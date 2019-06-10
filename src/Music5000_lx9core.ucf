@@ -82,10 +82,10 @@ NET "pmod1<5>"      LOC = "P105" | IOSTANDARD = LVCMOS33 ;
 NET "pmod1<6>"      LOC = "P115" | IOSTANDARD = LVCMOS33 ;
 NET "pmod1<7>"      LOC = "P124" | IOSTANDARD = LVCMOS33 ;
 
-NET "pmod2<0>"      LOC = "P59"  | IOSTANDARD = LVCMOS33 ;
-NET "pmod2<1>"      LOC = "P57"  | IOSTANDARD = LVCMOS33 ;
-NET "pmod2<2>"      LOC = "P48"  | IOSTANDARD = LVCMOS33 ;
-NET "pmod2<3>"      LOC = "P46"  | IOSTANDARD = LVCMOS33 ;
+NET "pmod2<0>"      LOC = "P59"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "pmod2<1>"      LOC = "P57"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "pmod2<2>"      LOC = "P48"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "pmod2<3>"      LOC = "P46"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 #NET "pmod2<4>"      LOC = "P61" | IOSTANDARD = LVCMOS33 ; # shared with SPI DAC
 #NET "pmod2<5>"      LOC = "P58" | IOSTANDARD = LVCMOS33 ; # shared with SPI DAC

@@ -35,7 +35,7 @@ entity Music5000_lx9core is
         -- Misc
         pmod0        : out   std_logic_vector(7 downto 0);
         pmod1        : out   std_logic_vector(7 downto 0);
-        pmod2        : out   std_logic_vector(3 downto 0);
+        pmod2        : in    std_logic_vector(3 downto 0);
         sw1          : in    std_logic;
         sw2          : in    std_logic;
         led          : out   std_logic
@@ -79,24 +79,24 @@ begin
     inst_Music5000SpiDac : entity work.Music5000SpiDac
         port map (
             -- This is the 6MHz audio clock
-            clk6       => clk6       ,
+            clk6         => clk6        ,
             -- This is the cpu clock
-            clke       => clke       ,
-            rnw        => rnw        ,
-            rst_n      => rst_n      ,
-            pgfc_n     => pgfc_n     ,
-            pgfd_n     => pgfd_n     ,
-            bus_addr   => bus_addr   ,
-            bus_data   => bus_data   ,
-            bus_data_oel=>bus_data_oel,
-            dac_cs_n   => dac_cs_n   ,
-            dac_sck    => dac_sck    ,
-            dac_sdi    => dac_sdi    ,
-            dac_ldac_n => dac_ldac_n ,
-            enable5    => '1'        ,
-            enable3    => '1'        ,
-            irq_n      => irq_n      ,
-            owl        => sw1
+            clke         => clke        ,
+            rnw          => rnw         ,
+            rst_n        => rst_n       ,
+            pgfc_n       => pgfc_n      ,
+            pgfd_n       => pgfd_n      ,
+            bus_addr     => bus_addr    ,
+            bus_data     => bus_data    ,
+            bus_data_oel => bus_data_oel,
+            dac_cs_n     => dac_cs_n    ,
+            dac_sck      => dac_sck     ,
+            dac_sdi      => dac_sdi     ,
+            dac_ldac_n   => dac_ldac_n  ,
+            enable5      => '1'         ,
+            enable3      => '1'         ,
+            irq_n        => irq_n       ,
+            owl          => pmod2(3)
             );
 
     ------------------------------------------------
@@ -116,7 +116,6 @@ begin
 
     pmod0        <= (others => '0');
     pmod1        <= (others => '0');
-    pmod2        <= (others => '0');
 
     led          <= sw1 or sw2;
 
