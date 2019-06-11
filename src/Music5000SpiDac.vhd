@@ -72,7 +72,11 @@ begin
                 end if;
             elsif pgfc_n = '0' and bus_addr = x"ff" then
                 if rnw = '0' then
-                    owl_page  <= '0';
+                    if owl = '1' and bus_data = x"00" then
+                        owl_page <= '1';
+                    else
+                        owl_page <= '0';
+                    end if;
                 else
                     irq_n <= '1';
                 end if;
