@@ -279,9 +279,47 @@ begin
     end process;
 
     c0(0) <= addr(2) and c4d;
-    bb <= sum1 when s0_n = '0' and load = '0' else
-         phase_dout when addr(0) = '0' and load = '0' else
-         (others => '0');
+
+    -- The final log sample value is calculated in cycle 0 (when s0_n = 0)
+    -- and latched into the DAC at the end of that cycle
+    --
+    -- During cycle 0 the ALU needs to be configured so that:
+    --   the aa input is the output of the wave ram (wave data)
+    --   the bb input is the current amplitude
+    --
+    -- The amplitude is output by the wave ram during cycle 7, but
+    -- changes in amplitude must be delayed until the next zero
+    -- crossing of the waveform. This is achieved by using the phase
+    -- ram to store the old amplitude value.
+    --
+    -- A zero crossing is flagged by sx_n = 0, so this signal is used
+    -- control whether the amplitude value in the phase ram is updated
+    -- at the end of cycle 7.
+    --
+    -- In the TTL implementation the phase ram has a bidirectional
+    -- data bus, so regardless of whether a phase ram write happens on
+    -- cycle 7, at the end of the cycle the data bus as the correct
+    -- amplitude value. This just needs to be delayed one cycle (by
+    -- IC12) so it is valid during cycle 0.
+    --
+    -- In the FPGA implemention, the block RAMs are registered and
+    -- have seperate data in/data out connections. There isn't time
+    -- for the write of the amplitude at the end of cycle 7 to
+    -- propagate to the phase ram output. So some additional logic is
+    -- needed.
+    --
+    -- So compared to the TTL implementation, the FPGA has one
+    -- additional Mux, where a zero crossing in cycle 0 is flagged by
+    -- c4d = '1'
+    --
+    -- Note: the load = '0' term here is the latched phase set bit
+    -- which originated as bit 0 of the Freq Lo register. This is
+    -- pretty much the same as the TTL implementation, where this
+    -- signal is unlabelled, but comes from IC3.
+
+    bb <= sum1       when load = '0' and s0_n = '0' and c4d = '1' else  -- cycle 0 (zero crossing)
+          phase_dout when load = '0' and addr(0) = '0'            else  -- cycle 0 (not zero crossing), 2, 4, 6
+          (others => '0');                                              -- cycle 1, 3, 5, 7
 
     sum <= std_logic_vector(unsigned("0" & aa) + unsigned("0" & bb) + unsigned("00000000" & c0));
     c4 <= sum(8);
