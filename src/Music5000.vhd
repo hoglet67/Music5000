@@ -57,6 +57,7 @@ signal aa : std_logic_vector (7 downto 0);
 signal bb : std_logic_vector (7 downto 0);
 
 signal ram_clk : std_logic;
+signal ram_clken : std_logic;
 signal ram_din : std_logic_vector (7 downto 0);
 signal ram_dout : std_logic_vector (7 downto 0);
 signal ram_addr : std_logic_vector (10 downto 0);
@@ -147,6 +148,7 @@ begin
      -- this is a cludge to workaround an issue with early Cyclone II parts
      -- google for:
      ram_clk <= clk6;
+     ram_clken <= clk6en;
      process (clk6)
          variable we1 : std_logic;
          variable we2 : std_logic;
@@ -179,12 +181,14 @@ begin
         port map (
             -- port A connects to 1MHz Bus
             clka  => ram_clk,
+            ena   => ram_clken,
             wea   => ram_we,
             addra => ram_addr,
             dina  => ram_din,
             douta => ram_dout,
             -- port B connects to DSP
             clkb  => clk6,
+            enb   => clk6en,
             web   => not rst_n,    -- write zero to the RAM on reset
             addrb => wave_addr,
             dinb  => (others => '0'),
@@ -244,12 +248,14 @@ begin
         port map (
             -- port A
             clka  => clk6,
+            ena   => clk6en,
             wea   => phase_we,
             addra => phase_addr,
             dina  => sum(7 downto 0),
             douta => phase_dout,
             -- port B is not used
             clkb  => '0',
+            enb   => '0',
             web   => '0',
             addrb => (others => '0'),
             dinb  => (others => '0'),
