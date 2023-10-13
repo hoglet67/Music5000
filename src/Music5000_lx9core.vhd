@@ -46,6 +46,7 @@ architecture Behavioral of Music5000_lx9core is
 
 signal clk6 : std_logic;
 signal irq_n : std_logic;
+signal spdif : std_logic;
 
 begin
 
@@ -77,6 +78,10 @@ begin
     ------------------------------------------------
 
     inst_Music5000SpiDac : entity work.Music5000SpiDac
+        generic map (
+            sumwidth     => 19,
+            dacwidth     => 18
+            )
         port map (
             -- This is the 6MHz audio clock
             clk6         => clk6        ,
@@ -95,6 +100,7 @@ begin
             dac_ldac_n   => dac_ldac_n  ,
             enable5      => '1'         ,
             enable3      => '1'         ,
+            spdif        => spdif       ,
             irq_n        => irq_n       ,
             owl          => pmod2(3)
             );
@@ -115,7 +121,7 @@ begin
     ram_wel      <= '1';
 
     pmod0        <= (others => '0');
-    pmod1        <= (others => '0');
+    pmod1        <= "0" & spdif & "000000";
 
     led          <= sw1 or sw2;
 

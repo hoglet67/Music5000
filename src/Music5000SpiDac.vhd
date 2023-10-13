@@ -25,6 +25,7 @@ entity Music5000SpiDac is
         dac_ldac_n : out   std_logic;
         enable5    : in    std_logic;
         enable3    : in    std_logic;
+        spdif      : out   std_logic;
         irq_n      : out   std_logic;
         test_o     : out   std_logic;
         owl        : in    std_logic := '1'
@@ -51,6 +52,10 @@ signal dout5_oel       : std_logic;
 signal owl_dout        : std_logic_vector(7 downto 0);
 signal owl_oel         : std_logic;
 signal owl_page        : std_logic;
+
+signal spdif_load      : std_logic;
+signal spdif_sample    : std_logic_vector(19 downto 0);
+signal spdif_channelA  : std_logic;
 
 begin
 
@@ -230,7 +235,23 @@ begin
                 end if;
             end if;
         end if;
-     end process;
+    end process;
 
+    ------------------------------------------------
+    -- S/PDIF Output
+    ------------------------------------------------
+
+    inst_spdif: entity work.spdif_serializer
+        port map (
+            clk          => clk6,
+            auxAudioBits => (others => '0'),
+            sample       => spdif_sample,
+            load         => spdif_load,
+            channelA     => spdif_channelA,
+            spdifOut     => spdif
+            );
+
+    spdif_load <= '1' when unsigned(cycle(5 downto 0)) = 1 else '0';
+    spdif_sample <= audio_l & "00" when spdif_channelA = '1' else audio_r & "00";
 
 end Behavioral;
