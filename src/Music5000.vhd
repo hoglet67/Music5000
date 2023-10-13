@@ -26,7 +26,7 @@ entity Music5000 is
         sumwidth : integer := 20;
         dacwidth : integer := 16;
         id       : std_logic_vector(3 downto 0) := "0011"
-    );
+        );
     port (
         -- This is the cpu clock
         clk      : in     std_logic;
@@ -46,64 +46,64 @@ entity Music5000 is
         audio_r  : out    std_logic_vector (dacwidth - 1 downto 0);
         cycle    : out    std_logic_vector (6 downto 0);
         test     : out    std_logic
-    );
+        );
 end Music5000;
 
 architecture Behavioral of Music5000 is
 
-signal sum : std_logic_vector (8 downto 0);
-signal sum1 : std_logic_vector (7 downto 0);
-signal aa : std_logic_vector (7 downto 0);
-signal bb : std_logic_vector (7 downto 0);
+    signal sum : std_logic_vector (8 downto 0);
+    signal sum1 : std_logic_vector (7 downto 0);
+    signal aa : std_logic_vector (7 downto 0);
+    signal bb : std_logic_vector (7 downto 0);
 
-signal ram_clk : std_logic;
-signal ram_clken : std_logic;
-signal ram_din : std_logic_vector (7 downto 0);
-signal ram_dout : std_logic_vector (7 downto 0);
-signal ram_addr : std_logic_vector (10 downto 0);
-signal ram_we : std_logic;
-signal wave_dout : std_logic_vector (7 downto 0);
-signal wave_addr : std_logic_vector (10 downto 0);
+    signal ram_clk : std_logic;
+    signal ram_clken : std_logic;
+    signal ram_din : std_logic_vector (7 downto 0);
+    signal ram_dout : std_logic_vector (7 downto 0);
+    signal ram_addr : std_logic_vector (10 downto 0);
+    signal ram_we : std_logic;
+    signal wave_dout : std_logic_vector (7 downto 0);
+    signal wave_addr : std_logic_vector (10 downto 0);
 
-signal phase_we : std_logic;
-signal phase_addr : std_logic_vector (10 downto 0);
-signal phase_dout : std_logic_vector (7 downto 0);
+    signal phase_we : std_logic;
+    signal phase_addr : std_logic_vector (10 downto 0);
+    signal phase_dout : std_logic_vector (7 downto 0);
 
-signal addr : std_logic_vector (6 downto 0);
-signal pa   : std_logic_vector (2 downto 1);
+    signal addr : std_logic_vector (6 downto 0);
+    signal pa   : std_logic_vector (2 downto 1);
 
-signal s0_n : std_logic;
-signal s1_n : std_logic;
-signal s4_n : std_logic;
-signal s6_n : std_logic;
-signal s7_n : std_logic;
-signal sx_n : std_logic;
-signal index : std_logic;
-signal invert : std_logic;
-signal c0 : std_logic_vector(0 downto 0);
-signal c4 : std_logic;
-signal c4tmp : std_logic;
-signal c4d : std_logic;
-signal sign : std_logic;
-signal gate_n: std_logic;
-signal load : std_logic;
+    signal s0_n : std_logic;
+    signal s1_n : std_logic;
+    signal s4_n : std_logic;
+    signal s6_n : std_logic;
+    signal s7_n : std_logic;
+    signal sx_n : std_logic;
+    signal index : std_logic;
+    signal invert : std_logic;
+    signal c0 : std_logic_vector(0 downto 0);
+    signal c4 : std_logic;
+    signal c4tmp : std_logic;
+    signal c4d : std_logic;
+    signal sign : std_logic;
+    signal gate_n: std_logic;
+    signal load : std_logic;
 
-signal dac_input_log : std_logic_vector (6 downto 0);
-signal dac_input_lin : std_logic_vector (12 downto 0);
-signal dac_input_lin_l : unsigned (sumwidth - 1 downto 0);
-signal dac_input_lin_r : unsigned(sumwidth - 1 downto 0);
-signal dac_pos : std_logic_vector (3 downto 0);
-signal dac_sign : std_logic;
-signal dac_sb : std_logic;
-signal dac_ed : std_logic;
+    signal dac_input_log : std_logic_vector (6 downto 0);
+    signal dac_input_lin : std_logic_vector (12 downto 0);
+    signal dac_input_lin_l : unsigned (sumwidth - 1 downto 0);
+    signal dac_input_lin_r : unsigned(sumwidth - 1 downto 0);
+    signal dac_pos : std_logic_vector (3 downto 0);
+    signal dac_sign : std_logic;
+    signal dac_sb : std_logic;
+    signal dac_ed : std_logic;
 
-signal reg_s0 : std_logic_vector (2 downto 0);
-signal reg_s4 : std_logic_vector (3 downto 0);
+    signal reg_s0 : std_logic_vector (2 downto 0);
+    signal reg_s4 : std_logic_vector (3 downto 0);
 
 -- bits of address fcff
-signal wrg : std_logic;
-signal bank : std_logic_vector(2 downto 0);
-signal spare : std_logic;
+    signal wrg : std_logic;
+    signal bank : std_logic_vector(2 downto 0);
+    signal spare : std_logic;
 
 begin
 
@@ -144,30 +144,30 @@ begin
     -- ram_we <= '1' when clk6en = '1' and pgfd_n = '0' and rnw = '0' and wrg = '1' else '0';
     -- ram_clk <= clk;
 
-     -- Running Wave RAM of the same clock
-     -- this is a cludge to workaround an issue with early Cyclone II parts
-     -- google for:
-     ram_clk <= clk6;
-     ram_clken <= clk6en;
-     process (clk6)
-         variable we1 : std_logic;
-         variable we2 : std_logic;
-     begin
-         if rising_edge(clk6) then
-             if clk6en = '1' then
-                 if we2 = '0' and we1 = '1' then
-                     ram_we <= '1';
-                 else
-                     ram_we <= '0';
-                 end if;
-                 we2 := we1;
-                 if pgfd_n = '0' and rnw = '0' and wrg = '1' then
-                     we1 := '1';
-                 else
-                     we1 := '0';
-                 end if;
-             end if;
-         end if;
+    -- Running Wave RAM of the same clock
+    -- this is a cludge to workaround an issue with early Cyclone II parts
+    -- google for:
+    ram_clk <= clk6;
+    ram_clken <= clk6en;
+    process (clk6)
+        variable we1 : std_logic;
+        variable we2 : std_logic;
+    begin
+        if rising_edge(clk6) then
+            if clk6en = '1' then
+                if we2 = '0' and we1 = '1' then
+                    ram_we <= '1';
+                else
+                    ram_we <= '0';
+                end if;
+                we2 := we1;
+                if pgfd_n = '0' and rnw = '0' and wrg = '1' then
+                    we1 := '1';
+                else
+                    we1 := '0';
+                end if;
+            end if;
+        end if;
     end process;
 
     ram_addr <= bank & a;
@@ -226,7 +226,7 @@ begin
                 end if;
             end if;
         end if;
-     end process;
+    end process;
 
     invert <= reg_s0(0);
 
@@ -365,10 +365,10 @@ begin
 
     inst_LogLinRom : entity work.LogLinRom
         port map (
-          CLK  => clk6,
-          ADDR => dac_input_log,
-          DATA => dac_input_lin
-       );
+            CLK  => clk6,
+            ADDR => dac_input_log,
+            DATA => dac_input_lin
+            );
 
     ------------------------------------------------
     -- Mixer
