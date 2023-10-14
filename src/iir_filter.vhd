@@ -27,26 +27,25 @@ architecture Behavioral of iir_filter is
 
     signal accumulate  : std_logic;
     signal accumulate1 : std_logic;
-    signal accumulate2 : std_logic;
 
-    signal lin0  : signed(W_DAT - 1 downto 0);
-    signal lin1  : signed(W_DAT - 1 downto 0);
-    signal lin2  : signed(W_DAT - 1 downto 0);
-    signal ltmp0 : signed(W_DAT - 1 downto 0);
-    signal ltmp1 : signed(W_DAT - 1 downto 0);
-    signal ltmp2 : signed(W_DAT - 1 downto 0);
-    signal lout0 : signed(W_DAT - 1 downto 0);
-    signal lout1 : signed(W_DAT - 1 downto 0);
-    signal lout2 : signed(W_DAT - 1 downto 0);
-    signal rin0  : signed(W_DAT - 1 downto 0);
-    signal rin1  : signed(W_DAT - 1 downto 0);
-    signal rin2  : signed(W_DAT - 1 downto 0);
-    signal rtmp0 : signed(W_DAT - 1 downto 0);
-    signal rtmp1 : signed(W_DAT - 1 downto 0);
-    signal rtmp2 : signed(W_DAT - 1 downto 0);
-    signal rout0 : signed(W_DAT - 1 downto 0);
-    signal rout1 : signed(W_DAT - 1 downto 0);
-    signal rout2 : signed(W_DAT - 1 downto 0);
+    signal lin0  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal lin1  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal lin2  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal ltmp0 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal ltmp1 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal ltmp2 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal lout0 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal lout1 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal lout2 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rin0  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rin1  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rin2  : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rtmp0 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rtmp1 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rtmp2 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rout0 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rout1 : signed(W_DAT - 1 downto 0) := (others => '0');
+    signal rout2 : signed(W_DAT - 1 downto 0) := (others => '0');
 
     signal multa : signed(W_COEFF - 1 downto 0);
     signal multb : signed(W_DAT - 1 downto 0);
@@ -55,8 +54,8 @@ architecture Behavioral of iir_filter is
     signal sum_shifted : signed(W_SUM - W_FRAC - 1 downto 0);
     signal sum_saturated : signed(W_DAT - 1 downto 0);
 
-    constant MAX_POS : signed(W_DAT - 1 downto 0) := (W_DAT - 1 => '0', others => '1');
-    constant MAX_NEG : signed(W_DAT - 1 downto 0) := (W_DAT - 1 => '1', others => '0');
+    constant MAX_NEG : signed(W_DAT - 1 downto 0) := ('1', others => '0');
+    constant MAX_POS : signed(W_DAT - 1 downto 0) := ('0', others => '1');
 
     constant SUM_ZERO : signed(W_SUM - 1 downto 0) := (others => '0');
 
@@ -99,17 +98,17 @@ architecture Behavioral of iir_filter is
     -- Gain is 147.38757472209932 which is taken account of currently
     -- because W_DAT - W_IO = 7, so the final output is attenuated by 128.
 
-    constant b10 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant b11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 2.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant b12 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant a11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.503352371060256 * (2.0 ** W_FRAC)), W_COEFF);
-    constant a12 : signed(W_COEFF - 1 downto 0) := to_signed(integer(-0.640959826975052 * (2.0 ** W_FRAC)), W_COEFF);
+    constant b10 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant b11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 2.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant b12 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant a11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.503352371060256  * (2.0 ** W_FRAC)), W_COEFF);
+    constant a12 : signed(W_COEFF - 1 downto 0) := to_signed(integer(-0.6545294918791053 * (2.0 ** W_FRAC)), W_COEFF);
 
-    constant b20 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant b21 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant b22 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.0               * (2.0 ** W_FRAC)), W_COEFF);
-    constant a21 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.640959826975052 * (2.0 ** W_FRAC)), W_COEFF);
-    constant a22 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.0               * (2.0 ** W_FRAC)), W_COEFF);
+    constant b20 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant b21 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant b22 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant a21 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.640959826975052  * (2.0 ** W_FRAC)), W_COEFF);
+    constant a22 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.0                * (2.0 ** W_FRAC)), W_COEFF);
 
     -- State
     --
@@ -152,9 +151,8 @@ begin
                 accumulate <= '1';
             end if;
             accumulate1 <= accumulate;
-            accumulate2 <= accumulate1;
 
-            if accumulate2 = '1' then
+            if accumulate1 = '1' then
                 sum <= sum + multout;
             else
                 sum <= SUM_ZERO + multout;
