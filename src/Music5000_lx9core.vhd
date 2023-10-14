@@ -47,6 +47,9 @@ architecture Behavioral of Music5000_lx9core is
 signal clk6 : std_logic;
 signal irq_n : std_logic;
 signal spdif : std_logic;
+signal filter : std_logic := '1';
+signal sw1_out : std_logic := '0';
+signal sw1_counter : unsigned(15 downto 0) := (others => '0');
 
 begin
 
@@ -100,10 +103,31 @@ begin
             dac_ldac_n   => dac_ldac_n  ,
             enable5      => '1'         ,
             enable3      => '1'         ,
+            filter       => filter      ,
             spdif        => spdif       ,
             irq_n        => irq_n       ,
             owl          => pmod2(3)
             );
+
+    ------------------------------------------------
+    -- Filter off/on via sw1
+    ------------------------------------------------
+    process(clk6)
+    begin
+        if rising_edge(clk6) then
+            if sw1 = sw1_out then
+                sw1_counter <= (others => '0');
+            else
+                sw1_counter <= sw1_counter + 1;
+                if sw1_counter = x"ffff" then
+                    sw1_out <= sw1;
+                    if sw1_out = '1' then
+                        filter <= not filter;
+                    end if;
+                end if;
+            end if;
+        end if;
+    end process;
 
     ------------------------------------------------
     -- 1MHZ Bus FPGA Adapter Specific Stuff
@@ -123,6 +147,6 @@ begin
     pmod0        <= (others => '0');
     pmod1        <= "0" & spdif & "000000";
 
-    led          <= sw1 or sw2;
+    led          <= filter;
 
 end Behavioral;

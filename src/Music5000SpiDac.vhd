@@ -25,6 +25,7 @@ entity Music5000SpiDac is
         dac_ldac_n : out   std_logic;
         enable5    : in    std_logic;
         enable3    : in    std_logic;
+        filter     : in    std_logic := '0';
         spdif      : out   std_logic;
         irq_n      : out   std_logic;
         test_o     : out   std_logic;
@@ -40,6 +41,11 @@ signal audio3_l        : std_logic_vector(dacwidth - 1 downto 0);
 signal audio3_r        : std_logic_vector(dacwidth - 1 downto 0);
 signal audio_l         : std_logic_vector(dacwidth - 1 downto 0);
 signal audio_r         : std_logic_vector(dacwidth - 1 downto 0);
+signal audio_l_fout    : std_logic_vector(dacwidth - 1 downto 0);
+signal audio_r_fout    : std_logic_vector(dacwidth - 1 downto 0);
+signal audio_l_filt    : std_logic_vector(dacwidth - 1 downto 0);
+signal audio_r_filt    : std_logic_vector(dacwidth - 1 downto 0);
+signal filt_load       : std_logic;
 signal dac_shift_reg_l : std_logic_vector(dacwidth - 1 downto 0);
 signal dac_shift_reg_r : std_logic_vector(dacwidth - 1 downto 0);
 signal cycle           : std_logic_vector(6 downto 0);
@@ -191,6 +197,25 @@ begin
     end process;
 
     ------------------------------------------------
+    -- Low Pass Filter
+    ------------------------------------------------
+
+    filt_load <= '1' when unsigned(cycle) = 0 else '0';
+
+    iir_filter_inst : entity work.iir_filter
+        port map (
+            clk  => clk6,
+            load => filt_load,
+            lin  => audio_l,
+            lout => audio_l_fout,
+            rin  => audio_r,
+            rout => audio_r_fout
+            );
+
+    audio_l_filt <= audio_l_fout when filter = '1' else audio_l;
+    audio_r_filt <= audio_r_fout when filter = '1' else audio_r;
+
+    ------------------------------------------------
     -- SPI DAC
     -- (this is used in all my standalone M5K designs)
     ------------------------------------------------
@@ -209,10 +234,10 @@ begin
             if (cycle(0) = '0') then
                 if (unsigned(cycle(5 downto 1)) = 0) then
                     if (cycle(6) = '0') then
-                        dac_shift_reg_l(dacwidth - 2 downto 0) <= audio_l(dacwidth - 2 downto 0);
-                        dac_shift_reg_l(dacwidth - 1)          <= not audio_l(dacwidth - 1);
-                        dac_shift_reg_r(dacwidth - 2 downto 0) <= audio_r(dacwidth - 2 downto 0);
-                        dac_shift_reg_r(dacwidth - 1)          <= not audio_r(dacwidth - 1);
+                        dac_shift_reg_l(dacwidth - 2 downto 0) <= audio_l_filt(dacwidth - 2 downto 0);
+                        dac_shift_reg_l(dacwidth - 1)          <= not audio_l_filt(dacwidth - 1);
+                        dac_shift_reg_r(dacwidth - 2 downto 0) <= audio_r_filt(dacwidth - 2 downto 0);
+                        dac_shift_reg_r(dacwidth - 1)          <= not audio_r_filt(dacwidth - 1);
                     end if;
                     dac_sdi <= cycle(6);
                 elsif (unsigned(cycle(5 downto 1)) < 4) then
@@ -252,6 +277,6 @@ begin
             );
 
     spdif_load <= '1' when unsigned(cycle(5 downto 0)) = 1 else '0';
-    spdif_sample <= audio_l & "00" when spdif_channelA = '1' else audio_r & "00";
+    spdif_sample <= audio_l_filt & "00" when spdif_channelA = '1' else audio_r_filt & "00";
 
 end Behavioral;
