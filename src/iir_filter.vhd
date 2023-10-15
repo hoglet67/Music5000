@@ -6,9 +6,9 @@ use ieee.math_real.all;
 entity iir_filter is
     generic (
         W_IO        : integer := 18; -- Width of external data inputs/outputs
-        W_DAT       : integer := 25; -- Width of internal data data nodes, giving headroom for filter gail
+        W_DAT       : integer := 25; -- Width of internal data data nodes, giving headroom for filter gain
         W_SUM       : integer := 48; -- Width of internal summers
-        W_COEFF     : integer := 18; -- Width of coefficients
+        W_COEFF     : integer := 18; -- Width of coefficients -- This needs to match the multipier width
         W_FRAC      : integer := 15  -- Width of fractional part of coefficients
         );
     port (
@@ -109,28 +109,108 @@ architecture Behavioral of iir_filter is
     constant a21 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.640959826975052  * (2.0 ** W_FRAC)), W_COEFF);
     constant a22 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 0.0                * (2.0 ** W_FRAC)), W_COEFF);
 
-    -- State
     --
-    -- 00 - idle
-    -- 01 - load       lin2  * b12
-    -- 02 - accumulate lin1  * b11
-    -- 03 - accumulate lin0  * b10
-    -- 04 - accumulate ltmp2 * a12
-    -- 05 - accumulate ltmp1 * a11
-    -- 06 - pipeline
-    -- 07 - pipeline
-    -- 08 - shift, saturate, store result in ltmp0
-    -- 09 - load       ltmp2 * b22
-    -- 0A - accumulate ltmp1 * b21
-    -- 0B - accumulate ltmp0 * b20
-    -- 0C - accumulate lout2 * a22
-    -- 0D - accumulate lout1 * a21
-    -- 0E - pipeline
-    -- 0F - pipeline
-    -- 10 - shift, saturate, store result in lout0
-    -- 11
-    -- .. - same for right channel
-    -- 20
+    -- The IIT Filter pipeline runs at 6MHz and a 2-channel sample
+    -- needs to be processed every 128 cycles (46.875KHz)
+    --
+    -- The state machine that coordinates this is basically a counter.
+    --
+    -- State 00->0F - Execute BiQuad 1 on the L channel (lin0  => ltmp0)
+    -- State 10->1F - Execute BiQuad 2 on the L channel (ltmp0 => lout0)
+    -- State 20->2F - Execute BiQuad 1 on the R channel (rin0  => rtmp0)
+    -- State 30->3F - Execute BiQuad 2 on the R channel (rtmp0 => rout0)
+    -- State 40->7F - Spare
+
+    -- Each BiQuad needs to perform five coeff (W_COEFF=18) x data
+    -- (W_DATA=25) multiplies.
+    --
+    -- Earlier versions of this design used two DSP48A1 cores; this
+    -- version uses only one, as the multiply is decomposed into:
+    --   LSB: coeff [signed] * data(  N-1 downto 0) [unsigned]
+    --   MSB: coeff [signed] * data(W_DAT downto N)   [signed]
+    -- so that a single DSP48A1 multiplier can be used.
+    --
+    -- N = W_DAT - W_COEFF = 7 (currently)
+    --
+    -- The pipeline operates as follows:
+    --
+    --      multa   multb   multout          sum
+    -- 00 - 0       0       0                 + 0
+    -- 01 - 0       0       0                 + 0
+    -- 02 - 0       0       0                 + 0
+    -- 03 - b12     lin2    0                 + 0
+    -- 04 - b12     lin2    b12 * lsb(lin2)   + 0
+    -- 05 - b11     lin1    b12 * msb(lin2)   = b12 * lsb(lin2)
+    -- 06 - b11     lin1    b11 * lsb(lin1)   + b12 * msb(lin2) << N
+    -- 07 - b10     lin0    b11 * msb(lin1)   + b11 * lsb(lin1)
+    -- 08 - b10     lin0    b10 * lsb(lin0)   + b11 * msb(lin1) << N
+    -- 09 - a12     ltmp2   b10 * msb(lin0)   + b10 * lsb(lin0)
+    -- 0A - a12     ltmp2   a12 * lsb(ltmp2)  + b10 * msb(lin0) << N
+    -- 0B - a11     ltmp1   a12 * msb(ltmp2)  + a12 * lsb(ltmp2)
+    -- 0C - a11     ltmp1   a11 * lsb(ltmp1)  + a12 * msb(ltmp1) << N
+    -- 0D - 0       0       a11 * msb(ltmp1)  + a11 * lsb(ltmp1)
+    -- 0E - 0       0       0                 + a11 * msb(ltmp1) << N
+    -- 0F - 0       0       0                 ===> ltmp0
+    -- 10 - 0       0       0                 + 0
+    -- 11 - 0       0       0                 + 0
+    -- 12 - 0       0       0                 + 0
+    -- 13 - b22     ltmp2   0                 + 0
+    -- 14 - b22     ltmp2   b22 * lsb(ltmp2)  + 0
+    -- 15 - b21     ltmp1   b22 * msb(ltmp2)  = b22 * lsb(ltmp2)
+    -- 16 - b21     ltmp1   b21 * lsb(ltmp1)  + b22 * msb(ltmp2) << N
+    -- 17 - b20     ltmp0   b21 * msb(ltmp1)  + b21 * lsb(ltmp1)
+    -- 18 - b20     ltmp0   b20 * lsb(ltmp0)  + b21 * msb(ltmp1) << N
+    -- 19 - a22     lout2   b20 * msb(ltmp0)  + b20 * lsb(ltmp0)
+    -- 1A - a22     lout2   a22 * lsb(lout2)  + b20 * msb(ltmp0) << N
+    -- 1B - a21     lout1   a22 * msb(lout2)  + a22 * lsb(lout2)
+    -- 1C - a21     lout1   a21 * lsb(lout1)  + a22 * msb(lout1) << N
+    -- 1D - 0       0       a21 * msb(lout1)  + a21 * lsb(lout1)
+    -- 1E - 0       0       0                 + a21 * msb(lout1) << N
+    -- 1F - 0       0       0                 ===> lout0
+    -- 20 - 0       0       0                 + 0
+    -- 21 - 0       0       0                 + 0
+    -- 22 - 0       0       0                 + 0
+    -- 23 - b12     rin2    0                 + 0
+    -- 24 - b12     rin2    b12 * lsb(rin2)   + 0
+    -- 25 - b11     rin1    b12 * msb(rin2)   = b12 * lsb(rin2)
+    -- 26 - b11     rin1    b11 * lsb(rin1)   + b12 * msb(rin2) << N
+    -- 27 - b10     rin0    b11 * msb(rin1)   + b11 * lsb(rin1)
+    -- 28 - b10     rin0    b10 * lsb(rin0)   + b11 * msb(rin1) << N
+    -- 29 - a12     rtmp2   b10 * msb(rin0)   + b10 * lsb(rin0)
+    -- 2A - a12     rtmp2   a12 * lsb(rtmp2)  + b10 * msb(rin0) << N
+    -- 2B - a11     rtmp1   a12 * msb(rtmp2)  + a12 * lsb(rtmp2)
+    -- 2C - a11     rtmp1   a11 * lsb(rtmp1)  + a12 * msb(rtmp1) << N
+    -- 2D - 0       0       a11 * msb(rtmp1)  + a11 * lsb(rtmp1)
+    -- 2E - 0       0       0                 + a11 * msb(rtmp1) << N
+    -- 2F - 0       0       0                 ===> rtmp0
+    -- 30 - 0       0       0                 + 0
+    -- 31 - 0       0       0                 + 0
+    -- 32 - 0       0       0                 + 0
+    -- 33 - b22     rtmp2   0                 + 0
+    -- 34 - b22     rtmp2   b22 * lsb(rtmp2)  + 0
+    -- 35 - b21     rtmp1   b22 * msb(rtmp2)  = b22 * lsb(rtmp2)
+    -- 36 - b21     rtmp1   b21 * lsb(rtmp1)  + b22 * msb(rtmp2) << N
+    -- 37 - b20     rtmp0   b21 * msb(rtmp1)  + b21 * lsb(rtmp1)
+    -- 38 - b20     rtmp0   b20 * lsb(rtmp0)  + b21 * msb(rtmp1) << N
+    -- 39 - a22     rout2   b20 * msb(rtmp0)  + b20 * lsb(rtmp0)
+    -- 3A - a22     rout2   a22 * lsb(rout2)  + b20 * msb(rtmp0) << N
+    -- 3B - a21     rout1   a22 * msb(rout2)  + a22 * lsb(rout2)
+    -- 3C - a21     rout1   a21 * lsb(rout1)  + a22 * msb(rout1) << N
+    -- 3D - 0       0       a21 * msb(rout1)  + a21 * lsb(rout1)
+    -- 3E - 0       0       0                 + a21 * msb(rout1) << N
+    -- 3F - 0       0       0                 ===> rout0
+    --
+    -- Future enhancements:
+    --
+    -- 1. Currently W_COEFF needs to be 18, i.e. the same size as the
+    -- DSP48A1 multiplier. Might be better to introduce W_MUL, and allow
+    -- W_COEFF to be smaller. That's mostly just cosmetic
+    --
+    -- 2. It might be possible to use a small RAM to store the state
+    -- variables (lin0..2, ltmp0..2, lout0..2, etc). There are 18 of
+    -- these. It would take multiple cycles to shift these, assuming
+    -- the RAM is single ported. But there is 32 cycles spare.
+    --
 
 begin
 
@@ -143,8 +223,8 @@ begin
     multbx <= multb(W_DAT - 1 downto W_DAT - W_COEFF) when state(0) = '0' else -- MSB
               resize('0' & multb(W_DAT - W_COEFF - 1 downto 0), W_COEFF);      -- LSB
 
-    multoutx <= resize(multout, W_DAT + W_COEFF) when state(0) = '0' else
-                (multout & resize("0", W_DAT - W_COEFF));
+    multoutx <= resize(multout, W_DAT + W_COEFF) when state(0) = '0' else      -- LSB
+                (multout & resize("0", W_DAT - W_COEFF));                      -- MSB
 
     process(clk)
     begin
@@ -153,7 +233,7 @@ begin
             multout <= multa * multbx;
 
             if state(3 downto 0) = "0100" then
-                sum <= SUM_ZERO + multout; -- load
+                sum <= SUM_ZERO + multoutx; -- load
             else
                 sum <= sum + multoutx; -- accumulate
             end if;
@@ -248,23 +328,23 @@ begin
                     multb <= (others => '0');
             end case;
 
-            if state(6 downto 0) = "0001110" then
+            if state = "0001110" then
                 ltmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0011110" then
+            if state = "0011110" then
                 lout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0101110" then
+            if state = "0101110" then
                 rtmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0111110" then
+            if state = "0111110" then
                 rout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0111111" then
+            if state = "0111111" then
                 lout <= std_logic_vector(lout0(W_DAT - 1 downto W_DAT - W_IO));
                 rout <= std_logic_vector(rout0(W_DAT - 1 downto W_DAT - W_IO));
             end if;
