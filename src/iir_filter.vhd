@@ -248,23 +248,23 @@ begin
                     multb <= (others => '0');
             end case;
 
-            if state(6 downto 0) = "0010000" then
+            if state(6 downto 0) = "0001110" then
                 ltmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0100000" then
+            if state(6 downto 0) = "0011110" then
                 lout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "0110000" then
+            if state(6 downto 0) = "0101110" then
                 rtmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "1000000" then
+            if state(6 downto 0) = "0111110" then
                 rout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(6 downto 0) = "1000001" then
+            if state(6 downto 0) = "0111111" then
                 lout <= std_logic_vector(lout0(W_DAT - 1 downto W_DAT - W_IO));
                 rout <= std_logic_vector(rout0(W_DAT - 1 downto W_DAT - W_IO));
             end if;
@@ -273,7 +273,7 @@ begin
                 if load = '1' then
                     state <= "0000001";
                 end if;
-            elsif state < "1000001" then
+            elsif state < "0111111" then
                 state <= state + 1;
             else
                 state <= "0000000";
