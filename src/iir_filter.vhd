@@ -48,6 +48,7 @@ architecture Behavioral of iir_filter is
     signal multb : signed(W_DAT - 1 downto 0);
     signal multbx : signed(W_COEFF - 1 downto 0);
     signal multout : signed(W_COEFF + W_COEFF - 1 downto 0);
+    signal multoutx : signed(W_COEFF + W_DAT - 1 downto 0);
     signal sum : signed(W_SUM - 1 downto 0);
     signal sum_shifted : signed(W_SUM - W_FRAC - 1 downto 0);
     signal sum_saturated : signed(W_DAT - 1 downto 0);
@@ -142,6 +143,9 @@ begin
     multbx <= multb(W_DAT - 1 downto W_DAT - W_COEFF) when state(0) = '0' else -- MSB
               resize('0' & multb(W_DAT - W_COEFF - 1 downto 0), W_COEFF);      -- LSB
 
+    multoutx <= resize(multout, W_DAT + W_COEFF) when state(0) = '0' else
+                (multout & resize("0", W_DAT - W_COEFF));
+
     process(clk)
     begin
         if rising_edge(clk) then
@@ -149,11 +153,9 @@ begin
             multout <= multa * multbx;
 
             if state(3 downto 0) = "0100" then
-                sum <= SUM_ZERO + multout; -- load LSB
-            elsif state(0) = '0' then
-                sum <= sum + multout; -- accumulate LSB
-				else
-                sum <= sum + (multout & resize("0", W_DAT - W_COEFF)); -- accumulate MSB
+                sum <= SUM_ZERO + multout; -- load
+            else
+                sum <= sum + multoutx; -- accumulate
             end if;
 
             -- Load / shift registers once per sample period
