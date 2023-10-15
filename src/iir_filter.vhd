@@ -8,8 +8,8 @@ entity iir_filter is
         W_IO        : integer := 18; -- Width of external data inputs/outputs
         W_DAT       : integer := 25; -- Width of internal data data nodes, giving headroom for filter gail
         W_SUM       : integer := 48; -- Width of internal summers
-        W_COEFF     : integer := 19; -- Width of coefficients
-        W_FRAC      : integer := 16  -- Width of fractional part of coefficients
+        W_COEFF     : integer := 18; -- Width of coefficients
+        W_FRAC      : integer := 15  -- Width of fractional part of coefficients
         );
     port (
         clk         : in  std_logic;
@@ -23,10 +23,7 @@ end iir_filter;
 
 architecture Behavioral of iir_filter is
 
-    signal state : unsigned(5 downto 0) := (others => '0');
-
-    signal accumulate  : std_logic;
-    signal accumulate1 : std_logic;
+    signal state : unsigned(6 downto 0) := (others => '0');
 
     signal lin0  : signed(W_DAT - 1 downto 0) := (others => '0');
     signal lin1  : signed(W_DAT - 1 downto 0) := (others => '0');
@@ -143,19 +140,16 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            multout <= multa * multb;
 
-            if (state(2 downto 0) = "001") then
-                accumulate <= '0';
-            else
-                accumulate <= '1';
-            end if;
-            accumulate1 <= accumulate;
+            if state(0) = '0' then
+                multout <= multa * multb;
 
-            if accumulate1 = '1' then
-                sum <= sum + multout;
-            else
-                sum <= SUM_ZERO + multout;
+                if state(3 downto 0) = "0100" then
+                    sum <= SUM_ZERO + multout; -- load
+                else
+                    sum <= sum + multout; -- accumulate
+                end if;
+
             end if;
 
             -- Load / shift registers once per sample period
@@ -177,7 +171,7 @@ begin
             end if;
 
             -- Muliplier A input (coefficient)
-            case state(3 downto 0) is
+            case state(4 downto 1) is
                 when "0001" =>
                     multa <= b12;
                 when "0010" =>
@@ -203,7 +197,7 @@ begin
             end case;
 
             -- Muliplier B input (coefficient)
-            case state(5 downto 0) is
+            case state(6 downto 1) is
                 when "000001" =>
                     multb <= lin2;
                 when "000010" =>
@@ -248,35 +242,35 @@ begin
                     multb <= (others => '0');
             end case;
 
-            if state(5 downto 0) = "001000" then
+            if state(6 downto 0) = "0010000" then
                 ltmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(5 downto 0) = "010000" then
+            if state(6 downto 0) = "0100000" then
                 lout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(5 downto 0) = "011000" then
+            if state(6 downto 0) = "0110000" then
                 rtmp0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(5 downto 0) = "100000" then
+            if state(6 downto 0) = "1000000" then
                 rout0 <= sum_saturated(W_DAT - 1 downto 0);
             end if;
 
-            if state(5 downto 0) = "100001" then
+            if state(6 downto 0) = "1000001" then
                 lout <= std_logic_vector(lout0(W_DAT - 1 downto W_DAT - W_IO));
                 rout <= std_logic_vector(rout0(W_DAT - 1 downto W_DAT - W_IO));
             end if;
 
-            if state = "000000" then
+            if state = "0000000" then
                 if load = '1' then
-                    state <= "000001";
+                    state <= "0000001";
                 end if;
-            elsif state < "100001" then
+            elsif state < "1000001" then
                 state <= state + 1;
             else
-                state <= "000000";
+                state <= "0000000";
             end if;
 
         end if;
