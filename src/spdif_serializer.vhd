@@ -30,14 +30,14 @@ architecture Behavioral of spdif_serializer is
     signal subframeCount   : std_logic_vector (7 downto 0) := "00000000";
     signal parity          : std_logic;
 
-    constant subcode       : std_logic := '0'; -- Remeember to change process sensitibity list
-    constant channelStatus : std_logic := '0'; -- Remeember to change process sensitibity list
-    constant validity      : std_logic := '0'; -- Remeember to change process sensitibity list
+    constant subcode       : std_logic := '0'; -- Remember to change process sensitibity list
+    constant channelStatus : std_logic := '0'; -- Remember to change process sensitibity list
+    constant validity      : std_logic := '0'; -- Remember to change process sensitibity list
 
 begin
     sample2     <= sample(19 downto 0);
     spdifOut    <= current;
-    channelA    <= subFrameCount(0);
+    channelA    <= not subFrameCount(0);
 
     parity <= auxAudioBits(3) xor auxAudioBits(2) xor auxAudioBits(1)  xor auxAudioBits(0) xor
               sample2(19)     xor sample2(18)     xor sample2(17)      xor sample2(16)      xor
