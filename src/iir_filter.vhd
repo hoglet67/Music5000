@@ -9,7 +9,7 @@ entity iir_filter is
         W_DAT       : integer := 25; -- Width of internal data data nodes, giving headroom for filter gain
         W_SUM       : integer := 48; -- Width of internal summers
         W_COEFF     : integer := 18; -- Width of coefficients -- This needs to match the multipier width
-        W_FRAC      : integer := 15  -- Width of fractional part of coefficients
+        W_FRAC      : integer := 16  -- Width of fractional part of coefficients
         );
     port (
         clk         : in  std_logic;
@@ -97,9 +97,11 @@ architecture Behavioral of iir_filter is
     -- Gain is 147.38757472209932 which is taken account of currently
     -- because W_DAT - W_IO = 7, so the final output is attenuated by 128.
 
-    constant b10 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
-    constant b11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 2.0                * (2.0 ** W_FRAC)), W_COEFF);
-    constant b12 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0                * (2.0 ** W_FRAC)), W_COEFF);
+    constant gain : real := 147.38757472209932 / 128.0;
+
+    constant b10 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0 / gain         * (2.0 ** W_FRAC)), W_COEFF);
+    constant b11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 2.0 / gain         * (2.0 ** W_FRAC)), W_COEFF);
+    constant b12 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.0 / gain         * (2.0 ** W_FRAC)), W_COEFF);
     constant a11 : signed(W_COEFF - 1 downto 0) := to_signed(integer( 1.503352371060256  * (2.0 ** W_FRAC)), W_COEFF);
     constant a12 : signed(W_COEFF - 1 downto 0) := to_signed(integer(-0.6545294918791053 * (2.0 ** W_FRAC)), W_COEFF);
 
