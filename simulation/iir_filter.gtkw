@@ -1,0 +1,90 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Tue Oct 17 09:41:36 2023
+[*]
+[dumpfile] "/disk1/home/dmb/atom/Music5000/simulation/audio.vcd"
+[dumpfile_mtime] "Tue Oct 17 09:37:41 2023"
+[dumpfile_size] 1642496
+[savefile] "/disk1/home/dmb/atom/Music5000/simulation/iir_filter.gtkw"
+[timestart] 0
+[size] 1853 1145
+[pos] -1 -1
+*-38.000000 94000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] iir_filter_tb.
+[sst_width] 223
+[signals_width] 487
+[sst_expanded] 1
+[sst_vpaned_height] 300
+@200
+-Test Bench
+-
+@28
+iir_filter_tb.clk6
+@23
+iir_filter_tb.counter[11:0]
+@28
+iir_filter_tb.filt_load
+@8420
+iir_filter_tb.audio_l[17:0]
+@20000
+-
+@18420
+iir_filter_tb.audio_l_fout[17:0]
+@20000
+-
+-
+-
+-
+@8420
+iir_filter_tb.audio_r[17:0]
+@20000
+-
+@18420
+iir_filter_tb.audio_r_fout[17:0]
+@20000
+-
+-
+-
+-
+@200
+-IIR Filter Internals
+-
+@28
+iir_filter_tb.iir_filter_inst.clk
+@22
+iir_filter_tb.iir_filter_inst.lin0[24:0]
+iir_filter_tb.iir_filter_inst.lin1[24:0]
+iir_filter_tb.iir_filter_inst.lin2[24:0]
+iir_filter_tb.iir_filter_inst.lin[17:0]
+@28
+iir_filter_tb.iir_filter_inst.load
+@22
+iir_filter_tb.iir_filter_inst.lout0[24:0]
+iir_filter_tb.iir_filter_inst.lout1[24:0]
+iir_filter_tb.iir_filter_inst.lout2[24:0]
+iir_filter_tb.iir_filter_inst.lout[17:0]
+iir_filter_tb.iir_filter_inst.ltmp0[24:0]
+iir_filter_tb.iir_filter_inst.ltmp1[24:0]
+iir_filter_tb.iir_filter_inst.ltmp2[24:0]
+iir_filter_tb.iir_filter_inst.multa[17:0]
+iir_filter_tb.iir_filter_inst.multb[24:0]
+iir_filter_tb.iir_filter_inst.multbx[17:0]
+iir_filter_tb.iir_filter_inst.multout[35:0]
+iir_filter_tb.iir_filter_inst.multoutx[42:0]
+iir_filter_tb.iir_filter_inst.rin0[24:0]
+iir_filter_tb.iir_filter_inst.rin1[24:0]
+iir_filter_tb.iir_filter_inst.rin2[24:0]
+iir_filter_tb.iir_filter_inst.rin[17:0]
+iir_filter_tb.iir_filter_inst.rout0[24:0]
+iir_filter_tb.iir_filter_inst.rout1[24:0]
+iir_filter_tb.iir_filter_inst.rout2[24:0]
+iir_filter_tb.iir_filter_inst.rout[17:0]
+iir_filter_tb.iir_filter_inst.rtmp0[24:0]
+iir_filter_tb.iir_filter_inst.rtmp1[24:0]
+iir_filter_tb.iir_filter_inst.rtmp2[24:0]
+iir_filter_tb.iir_filter_inst.state[6:0]
+iir_filter_tb.iir_filter_inst.sum[47:0]
+iir_filter_tb.iir_filter_inst.sum_saturated[24:0]
+iir_filter_tb.iir_filter_inst.sum_shifted[32:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -10,6 +10,9 @@ end iir_filter_tb;
 
 architecture Behavioral of iir_filter_tb is
 
+    -- Step input of from 0 to +/- 90% full scale value
+    constant step          : integer := (2 ** (dacwidth - 1)) * 90 / 100;
+
     signal audio_l         : std_logic_vector(dacwidth - 1 downto 0) := (others => '0');
     signal audio_r         : std_logic_vector(dacwidth - 1 downto 0) := (others => '0');
     signal audio_l_fout    : std_logic_vector(dacwidth - 1 downto 0);
@@ -32,8 +35,8 @@ begin
                 filt_load <= '0';
             end if;
             if counter = x"100" then
-                audio_l <= ('0', '0', others => '1');
-                audio_r <= ('0', '0', others => '1');
+                audio_l <= std_logic_vector(to_signed(step, dacwidth));
+                audio_r <= std_logic_vector(to_signed(-step, dacwidth));
             end if;
         end if;
     end process;
@@ -41,7 +44,9 @@ begin
     process(filt_load)
     begin
         if rising_edge(filt_load) then
-            report integer'image(to_integer(signed(audio_l))) & " " & integer'image(to_integer(signed(audio_l_fout)));
+            report
+                integer'image(to_integer(signed(audio_l_fout))) & " " &
+                integer'image(to_integer(signed(audio_r_fout)));
         end if;
     end process;
 
