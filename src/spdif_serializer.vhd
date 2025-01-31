@@ -14,6 +14,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 entity spdif_serializer is
     Port (
         clk          : in  std_logic;
+        clken        : in  std_logic := '1';
         auxAudioBits : in  std_logic_vector (3 downto 0);
         sample       : in  std_logic_vector (19 downto 0);
         load         : in  std_logic;
@@ -63,25 +64,27 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            if load = '1' then
-                bits <= parity           & "1" & channelStatus    & "1" & subcode          & "1" & validity         & "1" &
-                        sample2(19)      & "1" & sample2(18)      & "1" & sample2(17)      & "1" & sample2(16)      & "1" &
-                        sample2(15)      & "1" & sample2(14)      & "1" & sample2(13)      & "1" & sample2(12)      & "1" &
-                        sample2(11)      & "1" & sample2(10)      & "1" & sample2( 9)      & "1" & sample2( 8)      & "1" &
-                        sample2( 7)      & "1" & sample2( 6)      & "1" & sample2( 5)      & "1" & sample2( 4)      & "1" &
-                        sample2( 3)      & "1" & sample2( 2)      & "1" & sample2( 1)      & "1" & sample2( 0)      & "1" &
-                        auxAudioBits(3)  & "1" & auxAudioBits(2)  & "1" & auxAudioBits(1)  & "1" & auxAudioBits(0)  & "1" &
-                        preamble;
+            if clken = '1' then
+                if load = '1' then
+                    bits <= parity           & "1" & channelStatus    & "1" & subcode          & "1" & validity         & "1" &
+                            sample2(19)      & "1" & sample2(18)      & "1" & sample2(17)      & "1" & sample2(16)      & "1" &
+                            sample2(15)      & "1" & sample2(14)      & "1" & sample2(13)      & "1" & sample2(12)      & "1" &
+                            sample2(11)      & "1" & sample2(10)      & "1" & sample2( 9)      & "1" & sample2( 8)      & "1" &
+                            sample2( 7)      & "1" & sample2( 6)      & "1" & sample2( 5)      & "1" & sample2( 4)      & "1" &
+                            sample2( 3)      & "1" & sample2( 2)      & "1" & sample2( 1)      & "1" & sample2( 0)      & "1" &
+                            auxAudioBits(3)  & "1" & auxAudioBits(2)  & "1" & auxAudioBits(1)  & "1" & auxAudioBits(0)  & "1" &
+                            preamble;
 
-                if subframeCount = 191 then
-                    subFrameCount <= (others => '0');
+                    if subframeCount = 191 then
+                        subFrameCount <= (others => '0');
+                    else
+                        subFrameCount <= subFrameCount +1;
+                    end if;
                 else
-                    subFrameCount <= subFrameCount +1;
+                    bits <= "0" & bits(63 downto 1);
                 end if;
-            else
-                bits <= "0" & bits(63 downto 1);
+                current <= current xor bits(0) xor '0';
             end if;
-            current <= current xor bits(0) xor '0';
         end if;
     end process;
 end Behavioral;
